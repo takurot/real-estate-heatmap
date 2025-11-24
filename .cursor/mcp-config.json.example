@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "mlit-mcp": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mlit_mcp"
+      ],
+      "env": {
+        "MLIT_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+

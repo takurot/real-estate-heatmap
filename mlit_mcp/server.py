@@ -40,6 +40,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    @app.api_route("/", methods=["GET", "POST"], tags=["internal"])
+    async def index() -> dict[str, str]:
+        return {"status": "ok", "service": "mlit-mcp"}
+
     @app.get("/healthz", tags=["internal"])
     async def healthcheck() -> dict[str, str]:
         return {"status": "ok"}

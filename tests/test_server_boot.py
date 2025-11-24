@@ -30,7 +30,7 @@ def test_call_tool_endpoint_requires_name(client):
 def test_call_tool_executes_list_municipalities(client, monkeypatch):
     async def fake_fetch(self, endpoint, *, params, response_format, force_refresh=False):
         assert endpoint == "XIT002"
-        assert params["pref"] == "13"
+        assert params["area"] == "13"
         assert response_format == "json"
         return FetchResult(
             data={"data": [{"cityCode": "13101", "cityName": "千代田区"}]},

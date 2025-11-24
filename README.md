@@ -133,6 +133,71 @@ output/
 | `Price`        | float | 平均取引価格（万円）              |
 | `PricePerUnit` | float | 平均坪単価（万円/坪）             |
 
+## Cursor IDE からの MCP アクセス
+
+このプロジェクトには MCP（Model Context Protocol）サーバーが含まれており、Cursor IDE から直接アクセスできます。
+
+### MCP サーバーの設定
+
+1. **環境変数の設定**
+   - `.env` ファイルに `MLIT_API_KEY` を設定してください（`HUDOUSAN_API_KEY` と同じ値を使用可能）
+
+2. **Cursor の MCP 設定**
+   - Cursor の設定ファイルに MCP サーバーを追加します
+   - 設定ファイルの場所：
+     - **macOS**: `~/Library/Application Support/Cursor/User/globalStorage/rooveterinaryinc.roo-cline/settings/cline_mcp_settings.json`
+     - **Windows**: `%APPDATA%\Cursor\User\globalStorage\rooveterinaryinc.roo-cline\settings\cline_mcp_settings.json`
+     - **Linux**: `~/.config/Cursor/User/globalStorage/rooveterinaryinc.roo-cline/settings/cline_mcp_settings.json`
+
+3. **設定例**（仮想環境を使用する場合）:
+   ```json
+   {
+     "mcpServers": {
+       "mlit-mcp": {
+         "command": "/path/to/real-estate/env/bin/python",
+         "args": ["-m", "mlit_mcp"],
+         "env": {
+           "MLIT_API_KEY": "your-api-key-here"
+         }
+       }
+     }
+   }
+   ```
+
+   仮想環境を使わない場合:
+   ```json
+   {
+     "mcpServers": {
+       "mlit-mcp": {
+         "command": "python",
+         "args": ["-m", "mlit_mcp"],
+         "env": {
+           "MLIT_API_KEY": "your-api-key-here"
+         }
+       }
+     }
+   }
+   ```
+
+4. **Cursor の再起動**
+   - 設定を反映させるため、Cursor を再起動してください
+
+5. **MCP ツールの使用**
+   - Cursor のチャットで、以下のように自然言語で指示できます：
+     - 「mlit-mcp の list_municipalities ツールを使って東京（都道府県コード13）の市区町村一覧を取得して」
+     - 「東京都の市区町村データを取得して」
+
+### 利用可能な MCP ツール
+
+- **`list_municipalities`**: 指定された都道府県内の市区町村一覧を取得
+  - パラメータ:
+    - `prefecture_code`: 2桁の都道府県コード（例: "13" は東京都）
+    - `lang`: 言語（"ja" または "en"、デフォルト: "ja"）
+
+### 設定例ファイル
+
+プロジェクトルートの `.cursor/mcp-config.json.example` を参考にしてください。
+
 ## テスト
 
 E2Eテストスイートを実行：

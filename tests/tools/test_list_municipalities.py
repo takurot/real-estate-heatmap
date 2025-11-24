@@ -18,8 +18,8 @@ def http_client(monkeypatch, tmp_path):
             status_code=200,
             json={
                 "data": [
-                    {"cityCode": "13101", "cityName": "千代田区"},
-                    {"code": "13102", "name": "中央区"},
+                    {"id": "13101", "name": "千代田区"},
+                    {"MunicipalityCode": "13102", "Municipality": "中央区"},
                 ]
             },
         )

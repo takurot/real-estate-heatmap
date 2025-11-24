@@ -51,7 +51,7 @@ class MLITHttpClient:
         self._client = httpx.AsyncClient(
             base_url=base_url,
             timeout=timeout or settings.http_timeout,
-            headers={"X-API-KEY": self._api_key},
+            headers={"Ocp-Apim-Subscription-Key": self._api_key},
             transport=transport,
         )
 
@@ -93,9 +93,7 @@ class MLITHttpClient:
         return self._file_cache.get(cache_key)
 
     async def _send_with_retry(self, endpoint: str, params: Mapping[str, Any] | None) -> httpx.Response:
-        prepared_params = {"key": self._api_key}
-        if params:
-            prepared_params.update(params)
+        prepared_params = dict(params or {})
 
         async for attempt in AsyncRetrying(
             stop=stop_after_attempt(self._max_attempts),

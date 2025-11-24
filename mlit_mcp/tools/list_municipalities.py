@@ -87,7 +87,7 @@ class ListMunicipalitiesTool:
     async def run(self, payload: ListMunicipalitiesInput) -> ListMunicipalitiesResponse:
         fetch_result = await self._http_client.fetch(
             "XIT002",
-            params={"pref": payload.prefecture_code, "lang": payload.lang},
+            params={"area": payload.prefecture_code, "lang": payload.lang},
             response_format="json",
         )
 
@@ -118,8 +118,17 @@ class ListMunicipalitiesTool:
         for entry in records:
             if not isinstance(entry, dict):
                 continue
-            code = entry.get("cityCode") or entry.get("code")
-            name = entry.get("cityName") or entry.get("name")
+            code = (
+                entry.get("cityCode")
+                or entry.get("MunicipalityCode")
+                or entry.get("id")
+                or entry.get("code")
+            )
+            name = (
+                entry.get("cityName")
+                or entry.get("Municipality")
+                or entry.get("name")
+            )
             if not code or not name:
                 continue
             try:
