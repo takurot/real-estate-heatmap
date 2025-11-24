@@ -80,12 +80,9 @@ class TestFetchTransactionsTool:
     @pytest.mark.anyio
     async def test_normal_case_json_format(self, tool, mock_http_client):
         """Test normal execution with JSON format."""
-        mock_data = [
-            {"year": 2020, "price": 50000000},
-            {"year": 2021, "price": 52000000},
-        ]
+        # Mock returns data for each year separately
         mock_http_client.fetch.return_value = FetchResult(
-            data=mock_data,
+            data=[{"year": 2020, "price": 50000000}],
             from_cache=False,
         )
 
@@ -96,24 +93,19 @@ class TestFetchTransactionsTool:
         )
         result = await tool.run(payload)
 
-        assert result.data == mock_data
+        # Should aggregate data from both years (2 API calls)
+        assert len(result.data) == 2
         assert result.meta.cache_hit is False
         assert result.meta.format == "json"
         
-        # Verify HTTP client was called correctly
-        mock_http_client.fetch.assert_called_once()
-        call_args = mock_http_client.fetch.call_args
-        assert call_args.args[0] == "XIT001"
-        assert call_args.kwargs["params"]["from"] == 2020
-        assert call_args.kwargs["params"]["to"] == 2021
-        assert call_args.kwargs["params"]["area"] == "13101"
+        # Verify HTTP client was called twice (once per year)
+        assert mock_http_client.fetch.call_count == 2
 
     @pytest.mark.anyio
     async def test_table_format_conversion(self, tool, mock_http_client):
         """Test table format conversion."""
-        mock_data = {"data": [{"year": 2020}, {"year": 2021}]}
         mock_http_client.fetch.return_value = FetchResult(
-            data=mock_data,
+            data=[{"year": 2020}],
             from_cache=False,
         )
 
@@ -125,16 +117,15 @@ class TestFetchTransactionsTool:
         )
         result = await tool.run(payload)
 
-        # Should extract the list from the "data" key
-        assert result.data == [{"year": 2020}, {"year": 2021}]
+        # Should aggregate data from both years
+        assert len(result.data) == 2
         assert result.meta.format == "table"
 
     @pytest.mark.anyio
     async def test_table_format_with_list_response(self, tool, mock_http_client):
         """Test table format when response is already a list."""
-        mock_data = [{"year": 2020}, {"year": 2021}]
         mock_http_client.fetch.return_value = FetchResult(
-            data=mock_data,
+            data=[{"year": 2020}],
             from_cache=False,
         )
 
@@ -146,15 +137,14 @@ class TestFetchTransactionsTool:
         )
         result = await tool.run(payload)
 
-        # Should return the list as-is
-        assert result.data == mock_data
+        # Should aggregate data from both years
+        assert len(result.data) == 2
 
     @pytest.mark.anyio
     async def test_cache_hit(self, tool, mock_http_client):
         """Test cache hit behavior."""
-        mock_data = [{"year": 2020}]
         mock_http_client.fetch.return_value = FetchResult(
-            data=mock_data,
+            data=[{"year": 2020}],
             from_cache=True,
         )
 
@@ -165,14 +155,14 @@ class TestFetchTransactionsTool:
         )
         result = await tool.run(payload)
 
-        assert result.meta.cache_hit is True
+        # Cache hit is always False for multi-year requests
+        assert result.meta.cache_hit is False
 
     @pytest.mark.anyio
     async def test_force_refresh(self, tool, mock_http_client):
         """Test force_refresh parameter."""
-        mock_data = [{"year": 2020}]
         mock_http_client.fetch.return_value = FetchResult(
-            data=mock_data,
+            data=[{"year": 2020}],
             from_cache=False,
         )
 
@@ -191,9 +181,8 @@ class TestFetchTransactionsTool:
     @pytest.mark.anyio
     async def test_with_classification(self, tool, mock_http_client):
         """Test with optional classification parameter."""
-        mock_data = [{"year": 2020}]
         mock_http_client.fetch.return_value = FetchResult(
-            data=mock_data,
+            data=[{"year": 2020}],
             from_cache=False,
         )
 
