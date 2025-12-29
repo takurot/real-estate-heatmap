@@ -24,9 +24,7 @@ async def test_fetch_json_retries_on_retryable_status_and_caches(
     )
 
     # First fetch: should retry once
-    result = await client.fetch(
-        "XIT001", params={"pref": "13"}, response_format="json"
-    )
+    result = await client.fetch("XIT001", params={"pref": "13"}, response_format="json")
     assert result.data == {"items": [1, 2]}
     assert result.from_cache is False
 
@@ -35,9 +33,7 @@ async def test_fetch_json_retries_on_retryable_status_and_caches(
     assert len(requests) == 2
 
     # Second fetch: should hit cache, no new request
-    cached = await client.fetch(
-        "XIT001", params={"pref": "13"}, response_format="json"
-    )
+    cached = await client.fetch("XIT001", params={"pref": "13"}, response_format="json")
     assert cached.from_cache is True
 
     # Verify no additional requests sent
@@ -60,9 +56,7 @@ async def test_force_refresh_issues_new_request(
         file_cache=BinaryFileCache(tmp_path / "bin"),
     )
 
-    first = await client.fetch(
-        "XIT002", params={"pref": "27"}, response_format="json"
-    )
+    first = await client.fetch("XIT002", params={"pref": "27"}, response_format="json")
     assert first.data == {"value": 1}
     assert first.from_cache is False
 

@@ -60,3 +60,36 @@ def test_input_validation_rejects_invalid_prefecture_code():
 
     with pytest.raises(ValidationError):
         ListMunicipalitiesInput(prefecture_code="1")
+
+
+@pytest.mark.anyio
+async def test_force_refresh_bypasses_cache(http_client):
+    from mlit_mcp.tools.list_municipalities import (
+        ListMunicipalitiesInput,
+        ListMunicipalitiesTool,
+    )
+
+    tool = ListMunicipalitiesTool(http_client=http_client)
+    payload = ListMunicipalitiesInput(prefecture_code="13")
+
+    # First call - cache miss
+    await tool.run(payload)
+    assert http_client._call_count["count"] == 1
+
+    # Second call - cache hit
+    await tool.run(payload)
+    assert http_client._call_count["count"] == 1  # Should still be 1
+
+    # Third call with force_refresh - cache miss (bypass)
+    # Note: We need to update Input model to support force_refresh first,
+    # but for now we try to pass it to see it fail or if we need to modify input first.
+    # Since current Input doesn't have it, we should probably update Input test too.
+    # But let's assume we want to support it in Input.
+
+    # If I try to pass force_refresh to Input now, it will raise ValidationError (extra forbidden).
+    # So I cannot even write this test without modifying the Input model definition in the test or main code.
+    # But TDD says write failing test. The test will fail at Input construction.
+
+    payload_force = ListMunicipalitiesInput(prefecture_code="13", force_refresh=True)
+    await tool.run(payload_force)
+    assert http_client._call_count["count"] == 2
