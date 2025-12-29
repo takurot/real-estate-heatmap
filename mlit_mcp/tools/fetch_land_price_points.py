@@ -33,7 +33,7 @@ class FetchLandPricePointsInput(BaseModel):
 
 
 class ResponseMeta(BaseModel):
-    dataset: str = Field(default="XKT001")
+    dataset: str = Field(default="XPT002")
     source: str = Field(default="reinfolib.mlit.go.jp")
     cache_hit: bool = Field(alias="cacheHit")
     format: str

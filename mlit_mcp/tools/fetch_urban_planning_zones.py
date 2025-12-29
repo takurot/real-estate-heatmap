@@ -33,7 +33,7 @@ class FetchUrbanPlanningZonesInput(BaseModel):
 
 
 class ResponseMeta(BaseModel):
-    dataset: str = Field(default="XKT011")
+    dataset: str = Field(default="XKT001")
     source: str = Field(default="reinfolib.mlit.go.jp")
     cache_hit: bool = Field(alias="cacheHit")
     format: str

@@ -69,7 +69,7 @@ class FetchTransactionPointsInput(BaseModel):
 
 
 class ResponseMeta(BaseModel):
-    dataset: str = Field(default="XIT003")
+    dataset: str = Field(default="XPT001")
     source: str = Field(default="reinfolib.mlit.go.jp")
     cache_hit: bool = Field(alias="cacheHit")
     size_bytes: int = Field(alias="sizeBytes")

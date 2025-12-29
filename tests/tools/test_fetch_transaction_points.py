@@ -238,3 +238,20 @@ class TestFetchTransactionPointsTool:
         result = await tool.run(payload)
 
         assert result.meta.cache_hit is True
+
+    @pytest.mark.anyio
+    async def test_dataset_id(self, tool, mock_http_client, sample_geojson):
+        """Test correct dataset ID is returned."""
+        mock_http_client.fetch.return_value = FetchResult(
+            data=sample_geojson,
+            from_cache=False,
+        )
+
+        payload = FetchTransactionPointsInput(
+            area="13",
+            fromYear=2020,
+            toYear=2024,
+        )
+        result = await tool.run(payload)
+
+        assert result.meta.dataset == "XPT001"
