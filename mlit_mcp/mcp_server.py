@@ -66,6 +66,7 @@ async def list_municipalities(
     input_data = ListMunicipalitiesInput(
         prefecture_code=prefecture_code,
         lang=lang,
+        force_refresh=force_refresh,
     )
     result = await tool.run(input_data)
     return result.model_dump(by_alias=True)

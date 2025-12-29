@@ -3,7 +3,13 @@ from __future__ import annotations
 import logging
 from typing import Any, Iterable
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+)
 
 from mlit_mcp.http_client import FetchResult, MLITHttpClient
 
@@ -46,7 +52,12 @@ class ListMunicipalitiesInput(BaseModel):
         alias="prefectureCode",
         description="Two digit prefecture code, e.g. '13' for Tokyo",
     )
-    lang: str = Field(default="ja", description="Language for the response (ja/en)")
+    lang: str = Field(
+        default="ja", description="Language for the response (ja/en)"
+    )
+    force_refresh: bool = Field(
+        default=False, description="If true, bypass cache and fetch fresh data"
+    )
 
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
@@ -71,7 +82,10 @@ class ListMunicipalitiesTool:
     """Tool implementation for listing municipalities within a prefecture."""
 
     name = "mlit.list_municipalities"
-    description = "Return the list of municipalities within the specified prefecture using MLIT dataset XIT002."
+    description = (
+        "Return the list of municipalities within the specified prefecture "
+        "using MLIT dataset XIT002."
+    )
     input_model = ListMunicipalitiesInput
     output_model = ListMunicipalitiesResponse
 
@@ -94,8 +108,12 @@ class ListMunicipalitiesTool:
     async def run(self, payload: ListMunicipalitiesInput) -> ListMunicipalitiesResponse:
         fetch_result = await self._http_client.fetch(
             "XIT002",
-            params={"area": payload.prefecture_code, "lang": payload.lang},
+            params={
+                "area": payload.prefecture_code,
+                "lang": payload.lang,
+            },
             response_format="json",
+            force_refresh=payload.force_refresh,
         )
 
         municipalities = self._transform_records(fetch_result)
@@ -141,13 +159,16 @@ class ListMunicipalitiesTool:
             if not code or not name:
                 continue
             try:
-                municipalities.append(Municipality(code=str(code), name=str(name)))
+                municipalities.append(
+                    Municipality(code=str(code), name=str(name))
+                )
             except ValidationError:
                 continue
 
         if not municipalities:
             raise ValueError(
-                "MLIT API returned no municipalities for the provided prefecture code."
+                "MLIT API returned no municipalities "
+                "for the provided prefecture code."
             )
 
         return municipalities
