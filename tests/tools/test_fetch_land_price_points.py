@@ -84,9 +84,7 @@ class TestFetchLandPricePointsTool:
     """Test FetchLandPricePointsTool functionality."""
 
     @pytest.mark.anyio
-    async def test_geojson_format(
-        self, tool, mock_http_client, sample_geojson
-    ):
+    async def test_geojson_format(self, tool, mock_http_client, sample_geojson):
         """Test GeoJSON format response."""
         mock_http_client.fetch.return_value = FetchResult(
             data=sample_geojson,
@@ -177,9 +175,7 @@ class TestFetchLandPricePointsTool:
         assert call_args.kwargs["force_refresh"] is True
 
     @pytest.mark.anyio
-    async def test_large_response_resource_uri(
-        self, tool, mock_http_client, tmp_path
-    ):
+    async def test_large_response_resource_uri(self, tool, mock_http_client, tmp_path):
         """Test that large responses return a resource URI."""
         # Create a large file (> 1MB)
         large_content = b"x" * (1024 * 1024 + 1)
@@ -203,8 +199,6 @@ class TestFetchLandPricePointsTool:
 
         assert result.geojson is None
         assert result.resource_uri is not None
-        assert result.resource_uri.startswith(
-            "resource://mlit/land_price_points/"
-        )
+        assert result.resource_uri.startswith("resource://mlit/land_price_points/")
         assert result.meta.is_resource is True
         assert result.meta.size_bytes > 1024 * 1024

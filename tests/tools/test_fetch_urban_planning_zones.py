@@ -78,9 +78,7 @@ class TestFetchUrbanPlanningZonesTool:
     """Test FetchUrbanPlanningZonesTool functionality."""
 
     @pytest.mark.anyio
-    async def test_tiles_request_geojson(
-        self, tool, mock_http_client, sample_geojson
-    ):
+    async def test_tiles_request_geojson(self, tool, mock_http_client, sample_geojson):
         """Test tile request with GeoJSON format."""
         mock_http_client.fetch.return_value = FetchResult(
             data=sample_geojson,
@@ -134,9 +132,7 @@ class TestFetchUrbanPlanningZonesTool:
         assert decoded == pbf_content
 
     @pytest.mark.anyio
-    async def test_large_response_resource_uri(
-        self, tool, mock_http_client, tmp_path
-    ):
+    async def test_large_response_resource_uri(self, tool, mock_http_client, tmp_path):
         """Test that large responses return a resource URI."""
         # Create a large file (> 1MB)
         large_content = b"x" * (1024 * 1024 + 1)
@@ -159,8 +155,6 @@ class TestFetchUrbanPlanningZonesTool:
 
         assert result.geojson is None
         assert result.resource_uri is not None
-        assert result.resource_uri.startswith(
-            "resource://mlit/urban_planning_zones/"
-        )
+        assert result.resource_uri.startswith("resource://mlit/urban_planning_zones/")
         assert result.meta.is_resource is True
         assert result.meta.size_bytes > 1024 * 1024

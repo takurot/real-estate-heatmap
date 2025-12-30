@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
-from mlit_mcp.http_client import FetchResult, MLITHttpClient
+from mlit_mcp.http_client import MLITHttpClient
 from .gis_helpers import encode_mvt_to_base64
 
 logger = logging.getLogger(__name__)
+
+# Threshold for switching to resource URI (1MB)
+RESOURCE_THRESHOLD_BYTES = 1024 * 1024
 
 
 class FetchSchoolDistrictsInput(BaseModel):
@@ -20,13 +24,21 @@ class FetchSchoolDistrictsInput(BaseModel):
     administrative_area_code: str | None = Field(
         default=None,
         alias="administrativeAreaCode",
-        description="5-digit administrative area code (optional, can be comma-separated for multiple codes)",
+        description=(
+            "5-digit administrative area code "
+            "(optional, can be comma-separated for multiple codes)"
+        ),
     )
+    # fmt: off
     response_format: Literal["geojson", "pbf"] = Field(
         default="geojson",
         alias="responseFormat",
-        description="Response format: 'geojson' for GeoJSON, 'pbf' for Protocol Buffer (MVT)",
+        description=(
+            "Response format: 'geojson' for GeoJSON, "
+            "'pbf' for Protocol Buffer (MVT)"
+        ),
     )
+    # fmt: on
     force_refresh: bool = Field(
         default=False,
         alias="forceRefresh",
@@ -40,26 +52,33 @@ class ResponseMeta(BaseModel):
     dataset: str = Field(default="XKT004")
     source: str = Field(default="reinfolib.mlit.go.jp")
     cache_hit: bool = Field(alias="cacheHit")
+    size_bytes: int = Field(alias="sizeBytes")
+    is_resource: bool = Field(alias="isResource")
     format: str
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class FetchSchoolDistrictsResponse(BaseModel):
-    mvt_base64: str = Field(
-        alias="mvtBase64", description="Base64-encoded MVT tile data"
+    mvt_base64: str | None = Field(
+        default=None,
+        alias="mvtBase64",
+        description="Base64-encoded MVT tile data",
     )
+    geojson: dict[str, Any] | None = None
+    resource_uri: str | None = Field(default=None, alias="resourceUri")
     meta: ResponseMeta
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class FetchSchoolDistrictsTool:
-    """Tool implementation for fetching school district tiles from MLIT XKT004 API."""
+    """Tool for fetching school district tiles from MLIT XKT004 API."""
 
     name = "mlit.fetch_school_districts"
     description = (
-        "Fetch elementary school district (小学校区) tile data from MLIT dataset XKT004. "
+        "Fetch elementary school district (小学校区) tile data "
+        "from MLIT dataset XKT004. "
         "Returns MVT (Mapbox Vector Tile) data encoded as base64. "
         "Supports optional administrative area code filtering."
     )
@@ -85,7 +104,7 @@ class FetchSchoolDistrictsTool:
     async def run(
         self, payload: FetchSchoolDistrictsInput
     ) -> FetchSchoolDistrictsResponse:
-        params = {
+        params: dict[str, str | int] = {
             "response_format": payload.response_format,
             "z": payload.z,
             "x": payload.x,
@@ -102,15 +121,19 @@ class FetchSchoolDistrictsTool:
             force_refresh=payload.force_refresh,
         )
 
-        # Read MVT/PBF file and encode to base64
+        # Determine response size
         if fetch_result.file_path:
-            mvt_content = fetch_result.file_path.read_bytes()
+            size_bytes = fetch_result.file_path.stat().st_size
+            is_large = size_bytes > RESOURCE_THRESHOLD_BYTES
         else:
-            mvt_content = (
-                fetch_result.data if isinstance(fetch_result.data, bytes) else b""
-            )
-
-        mvt_base64 = encode_mvt_to_base64(mvt_content)
+            # Data is in memory
+            if isinstance(fetch_result.data, bytes):
+                size_bytes = len(fetch_result.data)
+            else:
+                # Assume JSON/Dict
+                json_str = json.dumps(fetch_result.data)
+                size_bytes = len(json_str.encode("utf-8"))
+            is_large = size_bytes > RESOURCE_THRESHOLD_BYTES
 
         logger.info(
             "fetch_school_districts",
@@ -121,19 +144,51 @@ class FetchSchoolDistrictsTool:
                 "administrative_area_code": payload.administrative_area_code,
                 "format": payload.response_format,
                 "cache_hit": fetch_result.from_cache,
-                "size_bytes": len(mvt_content),
+                "size_bytes": size_bytes,
+                "is_resource": is_large,
             },
         )
 
         meta = ResponseMeta(
-            cache_hit=fetch_result.from_cache,
+            cacheHit=fetch_result.from_cache,
             format=payload.response_format,
+            sizeBytes=size_bytes,
+            isResource=is_large,
         )
 
-        return FetchSchoolDistrictsResponse(
-            mvt_base64=mvt_base64,
-            meta=meta,
-        )
+        if is_large and fetch_result.file_path:
+            # Return as resource URI
+            fname = fetch_result.file_path.name
+            resource_uri = f"resource://mlit/school_districts/{fname}"
+            return FetchSchoolDistrictsResponse(
+                resourceUri=resource_uri,
+                meta=meta,
+            )
+
+        if payload.response_format == "pbf":
+            # Read MVT/PBF file and encode to base64
+            if fetch_result.file_path:
+                mvt_content = fetch_result.file_path.read_bytes()
+            else:
+                # fmt: off
+                mvt_content = (
+                    fetch_result.data
+                    if isinstance(fetch_result.data, bytes)
+                    else b""
+                )
+                # fmt: on
+
+            mvt_base64 = encode_mvt_to_base64(mvt_content)
+            return FetchSchoolDistrictsResponse(
+                mvtBase64=mvt_base64,
+                meta=meta,
+            )
+        else:
+            # GeoJSON format
+            return FetchSchoolDistrictsResponse(
+                geojson=fetch_result.data,
+                meta=meta,
+            )
 
 
 __all__ = [

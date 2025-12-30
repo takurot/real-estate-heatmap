@@ -26,8 +26,7 @@ class FetchLandPricePointsInput(BaseModel):
         default="geojson",
         alias="responseFormat",
         description=(
-            "Response format: 'geojson' for GeoJSON, "
-            "'pbf' for Protocol Buffer (MVT)"
+            "Response format: 'geojson' for GeoJSON, " "'pbf' for Protocol Buffer (MVT)"
         ),
     )
     force_refresh: bool = Field(
@@ -155,9 +154,7 @@ class FetchLandPricePointsTool:
             else:
                 # If data is in memory
                 pbf_content = (
-                    fetch_result.data
-                    if isinstance(fetch_result.data, bytes)
-                    else b""
+                    fetch_result.data if isinstance(fetch_result.data, bytes) else b""
                 )
 
             pbf_base64 = encode_mvt_to_base64(pbf_content)
