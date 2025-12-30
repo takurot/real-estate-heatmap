@@ -26,7 +26,7 @@
 | **PR2** | HTTP クライアント＆キャッシュ層 | 共通 HTTP/Retry/LRU/FileCache (完了) | PR1 |
 | **PR3** | `list_municipalities` ツール | 市区町村一覧 (XIT002) (完了) | PR2 |
 | **PR4** | `fetch_transactions` ツール | 取引データ (XIT001) + 整形 (完了) | PR2 |
-| **PR5** | `fetch_transaction_points` ツール | 取引ポイント (XIT003) + resource 化 | PR2 |
+| **PR5** | `fetch_transaction_points` ツール | 取引ポイント (XPT001) + resource 化 (完了) | PR2 |
 | **PR6** | `fetch_land_price_points` & `urban_planning` | 地価公示 (XKT001) / 都市計画 (XKT011) | PR5 |
 | **PR7** | `fetch_school_districts` & MVT | 学区 (XKT021) + MVT base64 | PR5 |
 | **PR8** | ロギング・監視・キャッシュ運用 | 構造化ログ、Stats、Force Refresh | PR2 |

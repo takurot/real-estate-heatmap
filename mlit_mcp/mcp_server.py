@@ -109,20 +109,30 @@ async def fetch_transactions(
 
 @mcp.tool()
 async def fetch_transaction_points(
-    area: str,
-    from_year: int,
-    to_year: int,
+    z: int,
+    x: int,
+    y: int,
+    from_quarter: str,
+    to_quarter: str,
+    response_format: str = "geojson",
+    price_classification: str | None = None,
+    land_type_code: str | None = None,
     bbox: dict | None = None,
     force_refresh: bool = False,
 ) -> dict:
     """
-    Fetch real estate transaction points as GeoJSON from MLIT dataset XIT003.
-    Large responses (>1MB) are returned as resource URIs.
+    Fetch real estate transaction points as GeoJSON from MLIT dataset XPT001.
+    Requires XYZ tile coordinates. Large responses (>1MB) are returned as resource URIs.
 
     Args:
-        area: Area code (prefecture or city code)
-        from_year: Starting year (2005-2030)
-        to_year: Ending year (2005-2030)
+        z: Zoom level (11-15)
+        x: Tile X coordinate
+        y: Tile Y coordinate
+        from_quarter: Start quarter in YYYYN format (e.g., 20231 for Q1 2023)
+        to_quarter: End quarter in YYYYN format (e.g., 20244 for Q4 2024)
+        response_format: 'geojson' or 'pbf', defaults to 'geojson'
+        price_classification: Optional price classification (01=transaction, 02=contract)
+        land_type_code: Optional land type codes, comma-separated (e.g., '01,02,07')
         bbox: Optional bounding box filter with minLon, minLat, maxLon, maxLat
         force_refresh: If true, bypass cache and fetch fresh data
     """
@@ -133,9 +143,14 @@ async def fetch_transaction_points(
 
     tool = FetchTransactionPointsTool(http_client=_get_http_client())
     input_data = FetchTransactionPointsInput(
-        area=area,
-        from_year=from_year,
-        to_year=to_year,
+        z=z,
+        x=x,
+        y=y,
+        from_quarter=from_quarter,
+        to_quarter=to_quarter,
+        response_format=response_format,
+        price_classification=price_classification,
+        land_type_code=land_type_code,
         bbox=bbox,
         force_refresh=force_refresh,
     )

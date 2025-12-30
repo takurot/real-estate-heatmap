@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from mlit_mcp.http_client import FetchResult, MLITHttpClient
+from mlit_mcp.http_client import MLITHttpClient
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +42,39 @@ class BoundingBox(BaseModel):
 
 
 class FetchTransactionPointsInput(BaseModel):
-    """Input schema for the fetch_transaction_points tool."""
+    """Input schema for the fetch_transaction_points tool.
 
-    area: str = Field(description="Area code (prefecture or city code)")
-    from_year: int = Field(
-        alias="fromYear", description="Starting year", ge=2005, le=2030
+    Uses XYZ tile coordinates as required by the MLIT XPT001 API.
+    """
+
+    z: int = Field(description="Zoom level (11-15)", ge=11, le=15)
+    x: int = Field(description="Tile X coordinate", ge=0)
+    y: int = Field(description="Tile Y coordinate", ge=0)
+    from_quarter: str = Field(
+        alias="fromQuarter",
+        description="Start quarter in YYYYN format (e.g., 20231 for Q1 2023)",
+        pattern=r"^\d{5}$",
     )
-    to_year: int = Field(alias="toYear", description="Ending year", ge=2005, le=2030)
+    to_quarter: str = Field(
+        alias="toQuarter",
+        description="End quarter in YYYYN format (e.g., 20244 for Q4 2024)",
+        pattern=r"^\d{5}$",
+    )
+    response_format: Literal["geojson", "pbf"] = Field(
+        default="geojson",
+        alias="responseFormat",
+        description="Response format: 'geojson' or 'pbf'",
+    )
+    price_classification: str | None = Field(
+        default=None,
+        alias="priceClassification",
+        description="Price classification (01=transaction, 02=contract, None=both)",
+    )
+    land_type_code: str | None = Field(
+        default=None,
+        alias="landTypeCode",
+        description="Land type codes, comma-separated (e.g., '01,02,07')",
+    )
     bbox: BoundingBox | None = Field(
         default=None,
         description="Optional bounding box filter for GeoJSON features",
@@ -61,13 +87,15 @@ class FetchTransactionPointsInput(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
-    @field_validator("to_year")
+    @field_validator("to_quarter")
     @classmethod
-    def validate_year_range(cls, to_year: int, info) -> int:
-        from_year = info.data.get("from_year")
-        if from_year is not None and to_year < from_year:
-            raise ValueError(f"toYear ({to_year}) must be >= fromYear ({from_year})")
-        return to_year
+    def validate_quarter_range(cls, to_quarter: str, info) -> str:
+        from_quarter = info.data.get("from_quarter")
+        if from_quarter is not None and to_quarter < from_quarter:
+            raise ValueError(
+                f"toQuarter ({to_quarter}) must be >= fromQuarter ({from_quarter})"
+            )
+        return to_quarter
 
 
 class ResponseMeta(BaseModel):
@@ -89,11 +117,15 @@ class FetchTransactionPointsResponse(BaseModel):
 
 
 class FetchTransactionPointsTool:
-    """Tool implementation for fetching transaction points as GeoJSON."""
+    """Tool implementation for fetching transaction points as GeoJSON.
+
+    Uses MLIT XPT001 API with XYZ tile coordinates.
+    """
 
     name = "mlit.fetch_transaction_points"
     description = (
-        "Fetch real estate transaction points as GeoJSON from MLIT dataset XIT003. "
+        "Fetch real estate transaction points as GeoJSON from MLIT dataset XPT001. "
+        "Requires XYZ tile coordinates (z/x/y). "
         "Large responses (>1MB) are returned as resource URIs."
     )
     input_model = FetchTransactionPointsInput
@@ -118,30 +150,26 @@ class FetchTransactionPointsTool:
     async def run(
         self, payload: FetchTransactionPointsInput
     ) -> FetchTransactionPointsResponse:
-        # XPT001 API requires z/x/y tile coordinates and from/to in YYYYQ format
-        # We need to convert year to quarter format (e.g., 2023 -> 20231 for Q1)
-        # For simplicity, we'll use Q1 of from_year and Q4 of to_year
-        from_quarter = f"{payload.from_year}1"  # Q1 of from_year
-        to_quarter = f"{payload.to_year}4"  # Q4 of to_year
-
-        params = {
-            "response_format": "geojson",
-            "from": from_quarter,
-            "to": to_quarter,
+        # Build API parameters per XPT001 specification
+        params: dict[str, Any] = {
+            "response_format": payload.response_format,
+            "z": payload.z,
+            "x": payload.x,
+            "y": payload.y,
+            "from": payload.from_quarter,
+            "to": payload.to_quarter,
         }
 
-        # Note: XPT001 requires z/x/y tile coordinates, but we don't have them in the input
-        # This is a design issue - we should either:
-        # 1. Add z/x/y to the input schema, or
-        # 2. Use a different API endpoint
-        # For now, we'll keep the area parameter and hope the API accepts it
-        if payload.area:
-            params["area"] = payload.area
+        # Add optional parameters
+        if payload.price_classification:
+            params["priceClassification"] = payload.price_classification
+        if payload.land_type_code:
+            params["landTypeCode"] = payload.land_type_code
 
         fetch_result = await self._http_client.fetch(
             "XPT001",
             params=params,
-            response_format="geojson",
+            response_format=payload.response_format,
             force_refresh=payload.force_refresh,
         )
 
@@ -155,17 +183,19 @@ class FetchTransactionPointsTool:
             size_bytes = len(geojson_str.encode("utf-8"))
             is_large = size_bytes > RESOURCE_THRESHOLD_BYTES
 
-        # Apply bbox filter if provided
+        # Apply bbox filter if provided (only for geojson format)
         geojson_data = fetch_result.data
-        if payload.bbox and geojson_data:
+        if payload.bbox and geojson_data and payload.response_format == "geojson":
             geojson_data = self._filter_by_bbox(geojson_data, payload.bbox)
 
         logger.info(
             "fetch_transaction_points",
             extra={
-                "from_year": payload.from_year,
-                "to_year": payload.to_year,
-                "area": payload.area,
+                "z": payload.z,
+                "x": payload.x,
+                "y": payload.y,
+                "from_quarter": payload.from_quarter,
+                "to_quarter": payload.to_quarter,
                 "size_bytes": size_bytes,
                 "is_resource": is_large,
                 "cache_hit": fetch_result.from_cache,

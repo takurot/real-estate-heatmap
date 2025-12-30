@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import pytest
-from pathlib import Path
 from unittest.mock import AsyncMock
 from pydantic import ValidationError
 
@@ -76,35 +75,71 @@ class TestFetchTransactionPointsInput:
     def test_valid_input(self):
         """Test valid input passes validation."""
         payload = FetchTransactionPointsInput(
-            area="13",
-            fromYear=2020,
-            toYear=2024,
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
         )
-        assert payload.area == "13"
-        assert payload.from_year == 2020
-        assert payload.to_year == 2024
+        assert payload.z == 13
+        assert payload.x == 7312
+        assert payload.y == 3008
+        assert payload.from_quarter == "20231"
+        assert payload.to_quarter == "20244"
         assert payload.bbox is None
+        assert payload.response_format == "geojson"
 
-    def test_year_range_validation(self):
-        """Test year range validation."""
+    def test_quarter_range_validation(self):
+        """Test quarter range validation."""
         with pytest.raises(ValidationError) as exc_info:
             FetchTransactionPointsInput(
-                area="13",
-                fromYear=2024,
-                toYear=2020,
+                z=13,
+                x=7312,
+                y=3008,
+                fromQuarter="20244",
+                toQuarter="20231",
             )
-        assert "toYear" in str(exc_info.value)
+        assert "toQuarter" in str(exc_info.value)
 
     def test_with_bbox(self):
         """Test input with bounding box."""
         payload = FetchTransactionPointsInput(
-            area="13",
-            fromYear=2020,
-            toYear=2024,
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
             bbox={"minLon": 139.0, "minLat": 35.0, "maxLon": 140.0, "maxLat": 36.0},
         )
         assert payload.bbox is not None
         assert payload.bbox.min_lon == 139.0
+
+    def test_zoom_level_validation(self):
+        """Test zoom level constraints."""
+        with pytest.raises(ValidationError):
+            FetchTransactionPointsInput(
+                z=10,  # Too low, must be 11-15
+                x=7312,
+                y=3008,
+                fromQuarter="20231",
+                toQuarter="20244",
+            )
+
+    def test_optional_parameters(self):
+        """Test optional parameters."""
+        payload = FetchTransactionPointsInput(
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
+            priceClassification="01",
+            landTypeCode="01,02,07",
+            responseFormat="pbf",
+        )
+        assert payload.price_classification == "01"
+        assert payload.land_type_code == "01,02,07"
+        assert payload.response_format == "pbf"
 
 
 class TestFetchTransactionPointsTool:
@@ -121,9 +156,11 @@ class TestFetchTransactionPointsTool:
         )
 
         payload = FetchTransactionPointsInput(
-            area="13",
-            fromYear=2020,
-            toYear=2024,
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
         )
         result = await tool.run(payload)
 
@@ -156,9 +193,11 @@ class TestFetchTransactionPointsTool:
         )
 
         payload = FetchTransactionPointsInput(
-            area="13",
-            fromYear=2020,
-            toYear=2024,
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
         )
         result = await tool.run(payload)
 
@@ -178,9 +217,11 @@ class TestFetchTransactionPointsTool:
 
         # Bbox that includes only the first point (139.7, 35.7)
         payload = FetchTransactionPointsInput(
-            area="13",
-            fromYear=2020,
-            toYear=2024,
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
             bbox={"minLon": 139.0, "minLat": 35.0, "maxLon": 139.75, "maxLat": 35.75},
         )
         result = await tool.run(payload)
@@ -198,9 +239,11 @@ class TestFetchTransactionPointsTool:
         )
 
         payload = FetchTransactionPointsInput(
-            area="13",
-            fromYear=2020,
-            toYear=2024,
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
         )
         result = await tool.run(payload)
 
@@ -217,9 +260,11 @@ class TestFetchTransactionPointsTool:
         )
 
         payload = FetchTransactionPointsInput(
-            area="13",
-            fromYear=2020,
-            toYear=2024,
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
             forceRefresh=True,
         )
         await tool.run(payload)
@@ -238,9 +283,11 @@ class TestFetchTransactionPointsTool:
         )
 
         payload = FetchTransactionPointsInput(
-            area="13",
-            fromYear=2020,
-            toYear=2024,
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
         )
         result = await tool.run(payload)
 
@@ -255,10 +302,71 @@ class TestFetchTransactionPointsTool:
         )
 
         payload = FetchTransactionPointsInput(
-            area="13",
-            fromYear=2020,
-            toYear=2024,
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
         )
         result = await tool.run(payload)
 
         assert result.meta.dataset == "XPT001"
+
+    @pytest.mark.anyio
+    async def test_api_params_construction(
+        self, tool, mock_http_client, sample_geojson
+    ):
+        """Test that API parameters are correctly constructed."""
+        mock_http_client.fetch.return_value = FetchResult(
+            data=sample_geojson,
+            from_cache=False,
+        )
+
+        payload = FetchTransactionPointsInput(
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
+            priceClassification="01",
+            landTypeCode="01,02,07",
+        )
+        await tool.run(payload)
+
+        # Verify API parameters
+        call_args = mock_http_client.fetch.call_args
+        params = call_args.kwargs["params"]
+        assert params["z"] == 13
+        assert params["x"] == 7312
+        assert params["y"] == 3008
+        assert params["from"] == "20231"
+        assert params["to"] == "20244"
+        assert params["priceClassification"] == "01"
+        assert params["landTypeCode"] == "01,02,07"
+
+    @pytest.mark.anyio
+    async def test_pbf_format(self, tool, mock_http_client, tmp_path):
+        """Test PBF format request."""
+        pbf_data = b"\x1a\x03mvt"  # Fake PBF data
+        pbf_file = tmp_path / "data.pbf"
+        pbf_file.write_bytes(pbf_data)
+
+        mock_http_client.fetch.return_value = FetchResult(
+            data=None,
+            file_path=pbf_file,
+            from_cache=False,
+        )
+
+        payload = FetchTransactionPointsInput(
+            z=13,
+            x=7312,
+            y=3008,
+            fromQuarter="20231",
+            toQuarter="20244",
+            responseFormat="pbf",
+        )
+        await tool.run(payload)
+
+        # Verify pbf format was passed
+        call_args = mock_http_client.fetch.call_args
+        assert call_args.kwargs["response_format"] == "pbf"
