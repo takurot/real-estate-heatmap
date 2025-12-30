@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from mlit_mcp.http_client import FetchResult, MLITHttpClient
+from mlit_mcp.http_client import MLITHttpClient
 
 logger = logging.getLogger(__name__)
 
@@ -14,19 +14,32 @@ class FetchTransactionsInput(BaseModel):
     """Input schema for the fetch_transactions tool."""
 
     from_year: int = Field(
-        alias="fromYear", description="Starting year (e.g. 2015)", ge=2005, le=2030
+        alias="fromYear",
+        description="Starting year (e.g. 2015)",
+        ge=2005,
+        le=2030,
     )
     to_year: int = Field(
-        alias="toYear", description="Ending year (e.g. 2024)", ge=2005, le=2030
+        alias="toYear",
+        description="Ending year (e.g. 2024)",
+        ge=2005,
+        le=2030,
     )
-    area: str = Field(description="Area code (prefecture or city code)")
+    area: str = Field(description="Area code (2-digit prefecture or 5-digit city code)")
     classification: str | None = Field(
         default=None,
-        description="Transaction classification code (optional)",
+        description=(
+            "Transaction classification code (optional). "
+            "01: Transaction Price, "
+            "02: Contract Price"
+        ),
     )
     format: Literal["json", "table"] = Field(
         default="json",
-        description="Response format: 'json' for raw data, 'table' for pandas-compatible structure",
+        description=(
+            "Response format: 'json' for raw data, "
+            "'table' for pandas-compatible structure"
+        ),
     )
     force_refresh: bool = Field(
         default=False,
@@ -44,6 +57,17 @@ class FetchTransactionsInput(BaseModel):
             raise ValueError(f"toYear ({to_year}) must be >= fromYear ({from_year})")
         return to_year
 
+    @field_validator("area")
+    @classmethod
+    def validate_area_code(cls, v: str) -> str:
+        if not v.isdigit():
+            raise ValueError("Area code must be numeric")
+        if len(v) not in (2, 5):
+            raise ValueError(
+                "Area code must be 2 digits (prefecture) or 5 digits (city)"
+            )
+        return v
+
 
 class ResponseMeta(BaseModel):
     dataset: str = Field(default="XIT001")
@@ -55,7 +79,7 @@ class ResponseMeta(BaseModel):
 
 
 class FetchTransactionsResponse(BaseModel):
-    data: list[dict[str, Any]] | dict[str, Any]
+    data: list[dict[str, Any]]
     meta: ResponseMeta
 
     model_config = ConfigDict(populate_by_name=True)
@@ -66,8 +90,8 @@ class FetchTransactionsTool:
 
     name = "mlit.fetch_transactions"
     description = (
-        "Fetch aggregated real estate transaction data from MLIT dataset XIT001. "
-        "Returns data in JSON or table format (pandas-compatible)."
+        "Fetch aggregated real estate transaction data from MLIT dataset "
+        "XIT001. Returns data in JSON or table format (pandas-compatible)."
     )
     input_model = FetchTransactionsInput
     output_model = FetchTransactionsResponse
@@ -93,16 +117,19 @@ class FetchTransactionsTool:
         # If year range is specified, we need to fetch each year separately
         all_data = []
 
+        # Determine if area is prefecture or city
+        params_base = {}
+        if len(payload.area) == 2:
+            params_base["area"] = payload.area
+        else:
+            params_base["city"] = payload.area
+
+        if payload.classification:
+            params_base["priceClassification"] = payload.classification
+
         for year in range(payload.from_year, payload.to_year + 1):
-            params = {
-                "year": year,
-                "area": payload.area,
-            }
-            if payload.classification:
-                params["classification"] = payload.classification
-            else:
-                # Default to price classification "01" (不動産取引価格情報)
-                params["priceClassification"] = "01"
+            params = params_base.copy()
+            params["year"] = year
 
             fetch_result = await self._http_client.fetch(
                 "XIT001",
@@ -113,24 +140,26 @@ class FetchTransactionsTool:
 
             year_data = fetch_result.data
             # Extract data from response if it's wrapped
+            # The API usually returns {"data": [...], "status": "OK"} or similar
             if isinstance(year_data, dict):
                 if "data" in year_data and isinstance(year_data["data"], list):
                     all_data.extend(year_data["data"])
                 elif "status" in year_data and year_data.get("status") == "OK":
                     if "data" in year_data and isinstance(year_data["data"], list):
                         all_data.extend(year_data["data"])
+                    # Fallback if structure is different but has status OK
+                    pass
                 else:
                     # If it's a single record or other structure, add as is
                     all_data.append(year_data)
             elif isinstance(year_data, list):
                 all_data.extend(year_data)
 
-        # Convert to table format if requested
-        data = all_data
-        if payload.format == "table":
-            data = self._convert_to_table(data)
+        # For XIT001, JSON and table format are both list of dicts,
+        # but 'table' usually implies we ensure it's flat.
+        # Since the API returns flat objects in 'data',
+        # we likely just return all_data.
 
-        record_count = len(data) if isinstance(data, list) else 1
         logger.info(
             "fetch_transactions",
             extra={
@@ -138,32 +167,16 @@ class FetchTransactionsTool:
                 "to_year": payload.to_year,
                 "area": payload.area,
                 "format": payload.format,
-                "record_count": record_count,
-                "cache_hit": False,  # Multiple requests, so cache hit status is not accurate
+                "record_count": len(all_data),
+                "cache_hit": False,  # Multiple requests
             },
         )
 
         meta = ResponseMeta(
-            cache_hit=False,  # Multiple requests, so cache hit status is not accurate
+            cache_hit=False,
             format=payload.format,
         )
-        return FetchTransactionsResponse(data=data, meta=meta)
-
-    def _convert_to_table(self, data: Any) -> list[dict[str, Any]]:
-        """Convert raw API response to pandas-compatible table format."""
-        if isinstance(data, list):
-            return data
-
-        if isinstance(data, dict):
-            # Try to extract list from common wrapper keys
-            for key in ("data", "items", "records", "transactions"):
-                if key in data and isinstance(data[key], list):
-                    return data[key]
-
-            # If it's a single record, wrap it in a list
-            return [data]
-
-        return []
+        return FetchTransactionsResponse(data=all_data, meta=meta)
 
 
 __all__ = [

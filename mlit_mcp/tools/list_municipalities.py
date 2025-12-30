@@ -52,9 +52,7 @@ class ListMunicipalitiesInput(BaseModel):
         alias="prefectureCode",
         description="Two digit prefecture code, e.g. '13' for Tokyo",
     )
-    lang: str = Field(
-        default="ja", description="Language for the response (ja/en)"
-    )
+    lang: str = Field(default="ja", description="Language for the response (ja/en)")
     force_refresh: bool = Field(
         default=False, description="If true, bypass cache and fetch fresh data"
     )
@@ -159,9 +157,7 @@ class ListMunicipalitiesTool:
             if not code or not name:
                 continue
             try:
-                municipalities.append(
-                    Municipality(code=str(code), name=str(name))
-                )
+                municipalities.append(Municipality(code=str(code), name=str(name)))
             except ValidationError:
                 continue
 
