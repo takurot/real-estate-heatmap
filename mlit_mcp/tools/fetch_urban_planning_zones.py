@@ -19,17 +19,14 @@ class FetchUrbanPlanningZonesInput(BaseModel):
     """Input schema for the fetch_urban_planning_zones tool."""
 
     # Tile coordinates (z/x/y) - all required
-    z: int = Field(
-        description="Zoom level for tile request (11-15)", ge=11, le=15
-    )
+    z: int = Field(description="Zoom level for tile request (11-15)", ge=11, le=15)
     x: int = Field(description="Tile X coordinate", ge=0)
     y: int = Field(description="Tile Y coordinate", ge=0)
     response_format: Literal["geojson", "pbf"] = Field(
         default="geojson",
         alias="responseFormat",
         description=(
-            "Response format: 'geojson' for GeoJSON, "
-            "'pbf' for Protocol Buffer (MVT)"
+            "Response format: 'geojson' for GeoJSON, " "'pbf' for Protocol Buffer (MVT)"
         ),
     )
     force_refresh: bool = Field(
@@ -143,9 +140,7 @@ class FetchUrbanPlanningZonesTool:
         if is_large and fetch_result.file_path:
             # Return as resource URI
             fname = fetch_result.file_path.name
-            resource_uri = (
-                f"resource://mlit/urban_planning_zones/{fname}"
-            )
+            resource_uri = f"resource://mlit/urban_planning_zones/{fname}"
             return FetchUrbanPlanningZonesResponse(
                 resource_uri=resource_uri,
                 meta=meta,
@@ -158,9 +153,7 @@ class FetchUrbanPlanningZonesTool:
             else:
                 # If data is in memory
                 pbf_content = (
-                    fetch_result.data
-                    if isinstance(fetch_result.data, bytes)
-                    else b""
+                    fetch_result.data if isinstance(fetch_result.data, bytes) else b""
                 )
 
             pbf_base64 = encode_mvt_to_base64(pbf_content)

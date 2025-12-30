@@ -28,7 +28,7 @@
 | **PR4** | `fetch_transactions` ツール | 取引データ (XIT001) + 整形 (完了) | PR2 |
 | **PR5** | `fetch_transaction_points` ツール | 取引ポイント (XPT001) + resource 化 (完了) | PR2 |
 | **PR6** | `fetch_land_price_points` & `urban_planning` | 地価公示 (XKT001) / 都市計画 (XKT011) (完了) | PR5 |
-| **PR7** | `fetch_school_districts` & MVT | 学区 (XKT021) + MVT base64 | PR5 |
+| **PR7** | `fetch_school_districts` & MVT | 学区 (XKT004) + MVT base64 (完了) | PR5 |
 | **PR8** | ロギング・監視・キャッシュ運用 | 構造化ログ、Stats、Force Refresh | PR2 |
 | **PR9** | 統合テストとドキュメント | E2E テスト, 負荷テスト, README 完成 | PR3-8 |
 
