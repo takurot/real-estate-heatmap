@@ -117,9 +117,7 @@ class MLITHttpClient:
             return FetchResult(data=data, from_cache=False)
 
         suffix = self._suffix_for_format(normalized_format)
-        path = self._file_cache.set(
-            cache_key, response.content, suffix=suffix
-        )
+        path = self._file_cache.set(cache_key, response.content, suffix=suffix)
         return FetchResult(file_path=path, from_cache=False)
 
     def _get_cached(self, normalized_format: str, cache_key: str) -> Any | None:

@@ -94,7 +94,7 @@ def create_app() -> FastAPI:
                         "uri": f"resource://mlit/transaction_points/{file_path.name}",
                         "name": file_path.stem,
                         "mimeType": "application/geo+json",
-                        "description": f"Cached GeoJSON transaction points data",
+                        "description": "Cached GeoJSON transaction points data",
                     }
                 )
 

@@ -35,9 +35,7 @@ def _get_http_client() -> Any:
         settings = get_settings()
         cache_root = Path(tempfile.gettempdir()) / "mlit_mcp_cache"
         json_cache = InMemoryTTLCache(maxsize=256, ttl=6 * 60 * 60)
-        file_cache = BinaryFileCache(
-            cache_root / "files", ttl_seconds=6 * 60 * 60
-        )
+        file_cache = BinaryFileCache(cache_root / "files", ttl_seconds=6 * 60 * 60)
         _http_client = MLITHttpClient(
             base_url=str(settings.base_url),
             json_cache=json_cache,
