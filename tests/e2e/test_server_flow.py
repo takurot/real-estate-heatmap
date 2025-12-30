@@ -81,15 +81,21 @@ def test_full_server_flow(client, monkeypatch):
 
     # Store original fetch to restore or just rely on monkeypatch context
 
-    async def fake_fetch_with_file(self, endpoint, *, params, response_format, force_refresh=False):
+    async def fake_fetch_with_file(
+        self, endpoint, *, params, response_format, force_refresh=False
+    ):
         if endpoint == "XPT001":
             return FetchResult(file_path=tmp_path, from_cache=False)
-        return await fake_fetch(self, endpoint, params=params, response_format=response_format)
+        return await fake_fetch(
+            self, endpoint, params=params, response_format=response_format
+        )
 
     monkeypatch.setattr(
         "mlit_mcp.http_client.MLITHttpClient.fetch", fake_fetch_with_file
     )
-    monkeypatch.setattr("mlit_mcp.tools.fetch_transaction_points.RESOURCE_THRESHOLD_BYTES", 0)
+    monkeypatch.setattr(
+        "mlit_mcp.tools.fetch_transaction_points.RESOURCE_THRESHOLD_BYTES", 0
+    )
 
     try:
         resp_pt = client.post(
