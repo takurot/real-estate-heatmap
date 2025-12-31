@@ -37,7 +37,7 @@ async def test_fetch_transactions_run_with_prefecture(mock_http_client):
     call1_args = mock_http_client.fetch.call_args_list[0]
     assert call1_args[0][0] == "XIT001"
     assert call1_args[1]["params"]["area"] == "13"
-    assert call1_args[1]["params"]["year"] == 2015
+    assert call1_args[1]["params"]["year"] == "2015"
     assert "city" not in call1_args[1]["params"]
 
     # Check result aggregation
