@@ -132,10 +132,10 @@ class FetchLandPricePointsTool:
         )
 
         meta = ResponseMeta(
-            cache_hit=fetch_result.from_cache,
+            cacheHit=fetch_result.from_cache,
             format=payload.response_format,
-            size_bytes=size_bytes,
-            is_resource=is_large,
+            sizeBytes=size_bytes,
+            isResource=is_large,
         )
 
         if is_large and fetch_result.file_path:
@@ -143,7 +143,7 @@ class FetchLandPricePointsTool:
             fname = fetch_result.file_path.name
             resource_uri = f"resource://mlit/land_price_points/{fname}"
             return FetchLandPricePointsResponse(
-                resource_uri=resource_uri,
+                resourceUri=resource_uri,
                 meta=meta,
             )
 
@@ -170,7 +170,7 @@ class FetchLandPricePointsTool:
 
             pbf_base64 = encode_mvt_to_base64(pbf_content)
             return FetchLandPricePointsResponse(
-                pbf_base64=pbf_base64,
+                pbfBase64=pbf_base64,
                 meta=meta,
             )
         else:

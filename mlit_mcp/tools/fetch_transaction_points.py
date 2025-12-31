@@ -210,9 +210,9 @@ class FetchTransactionPointsTool:
         )
 
         meta = ResponseMeta(
-            cache_hit=fetch_result.from_cache,
-            size_bytes=size_bytes,
-            is_resource=is_large,
+            cacheHit=fetch_result.from_cache,
+            sizeBytes=size_bytes,
+            isResource=is_large,
         )
 
         if is_large and fetch_result.file_path:
@@ -221,7 +221,7 @@ class FetchTransactionPointsTool:
                 f"resource://mlit/transaction_points/{fetch_result.file_path.name}"
             )
             return FetchTransactionPointsResponse(
-                resource_uri=resource_uri,
+                resourceUri=resource_uri,
                 meta=meta,
             )
         else:

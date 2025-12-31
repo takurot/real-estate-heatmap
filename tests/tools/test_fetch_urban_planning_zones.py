@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+import json
 from unittest.mock import AsyncMock
 from pydantic import ValidationError
 
@@ -158,3 +159,32 @@ class TestFetchUrbanPlanningZonesTool:
         assert result.resource_uri.startswith("resource://mlit/urban_planning_zones/")
         assert result.meta.is_resource is True
         assert result.meta.size_bytes > 1024 * 1024
+
+    @pytest.mark.anyio
+    async def test_cached_file_loading(self, tool, mock_http_client, tmp_path):
+        """Test loading small GeoJSON from cached file (when data is None)."""
+        # Create a small GeoJSON file
+        small_geojson = {"type": "FeatureCollection", "features": []}
+        geojson_file = tmp_path / "cached.geojson"
+        geojson_file.write_text(json.dumps(small_geojson))
+
+        # Mock fetch result with no memory data but with file path
+        mock_http_client.fetch.return_value = FetchResult(
+            data=None,
+            file_path=geojson_file,
+            from_cache=True,
+        )
+
+        payload = FetchUrbanPlanningZonesInput(
+            z=11,
+            x=1819,
+            y=806,
+            responseFormat="geojson",
+        )
+        result = await tool.run(payload)
+
+        # Should load content from file
+        assert result.geojson == small_geojson
+        assert result.resource_uri is None
+        assert result.meta.is_resource is False
+        assert result.meta.cache_hit is True
