@@ -270,9 +270,9 @@ async def fetch_school_districts(
         z=z,
         x=x,
         y=y,
-        administrative_area_code=administrative_area_code,
-        response_format=response_format,
-        force_refresh=force_refresh,
+        administrativeAreaCode=administrative_area_code,
+        responseFormat=response_format,
+        forceRefresh=force_refresh,
     )
     result = await tool.run(input_data)
     return result.model_dump(by_alias=True, exclude_none=True)
