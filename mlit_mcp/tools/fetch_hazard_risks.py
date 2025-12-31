@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import json
 from typing import Any, Literal
 from enum import Enum
 
@@ -113,7 +114,16 @@ class FetchHazardRisksTool:
                     force_refresh=payload.force_refresh,
                 )
 
-                data = fetch_result.data or {}
+                data = fetch_result.data
+                if data is None and fetch_result.file_path:
+                    try:
+                        content = fetch_result.file_path.read_bytes()
+                        data = json.loads(content)
+                    except Exception as ex:
+                        logger.error(f"Failed to read/parse file {fetch_result.file_path}: {ex}")
+                        data = {}
+                
+                data = data or {}
                 features = data.get("features", [])
                 
                 # Simple filtering: Return all features in the tile
