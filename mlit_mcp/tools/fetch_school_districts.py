@@ -185,8 +185,15 @@ class FetchSchoolDistrictsTool:
             )
         else:
             # GeoJSON format
+            # If data is in a file, read it
+            if fetch_result.file_path and not fetch_result.data:
+                with open(fetch_result.file_path, "r", encoding="utf-8") as f:
+                    geojson_data = json.load(f)
+            else:
+                geojson_data = fetch_result.data
+            
             return FetchSchoolDistrictsResponse(
-                geojson=fetch_result.data,
+                geojson=geojson_data,
                 meta=meta,
             )
 
