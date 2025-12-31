@@ -82,3 +82,43 @@ async def test_fetch_transactions_validation_error():
             toYear=2019,
             area="13",
         )
+
+
+@pytest.mark.asyncio
+async def test_fetch_transactions_large_response(mock_http_client):
+    # Mock a "large" response
+    large_data = [{"id": i} for i in range(1000)]
+    mock_http_client.fetch.return_value = FetchResult(
+        data={"data": large_data}, from_cache=False
+    )
+    
+    # Mock save_to_cache
+    from pathlib import Path
+    mock_http_client.save_to_cache.return_value = Path("/tmp/cache/large_file.json")
+
+    tool = FetchTransactionsTool(mock_http_client)
+    
+    # Patch threshold to force resource URI
+    import mlit_mcp.tools.fetch_transactions as mod
+    original_threshold = mod.RESOURCE_THRESHOLD_BYTES
+    mod.RESOURCE_THRESHOLD_BYTES = 10  # Very small threshold
+    
+    try:
+        input_data = FetchTransactionsInput(
+            from_year=2020,
+            to_year=2020,
+            area="13",
+        )
+        result = await tool.run(input_data)
+
+        # Verify resource URI returned
+        assert result.resource_uri == "resource://mlit/transactions/large_file.json"
+        assert result.data is None
+        
+        # Verify save_to_cache called
+        mock_http_client.save_to_cache.assert_called_once()
+        args = mock_http_client.save_to_cache.call_args
+        assert args[0][0].startswith("transactions:XIT001:13:2020-2020")
+        
+    finally:
+        mod.RESOURCE_THRESHOLD_BYTES = original_threshold

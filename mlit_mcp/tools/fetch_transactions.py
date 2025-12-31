@@ -78,8 +78,13 @@ class ResponseMeta(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
+# Threshold for switching to resource URI (1MB)
+RESOURCE_THRESHOLD_BYTES = 1024 * 1024
+
+
 class FetchTransactionsResponse(BaseModel):
-    data: list[dict[str, Any]]
+    data: list[dict[str, Any]] | None = None
+    resource_uri: str | None = Field(default=None, alias="resourceUri")
     meta: ResponseMeta
 
     model_config = ConfigDict(populate_by_name=True)
@@ -91,7 +96,8 @@ class FetchTransactionsTool:
     name = "mlit.fetch_transactions"
     description = (
         "Fetch aggregated real estate transaction data from MLIT dataset "
-        "XIT001. Returns data in JSON or table format (pandas-compatible)."
+        "XIT001. Returns data in JSON or table format (pandas-compatible). "
+        "Large responses (>1MB) are returned as resource URIs."
     )
     input_model = FetchTransactionsInput
     output_model = FetchTransactionsResponse
@@ -110,7 +116,7 @@ class FetchTransactionsTool:
     async def invoke(self, raw_arguments: dict | None) -> dict[str, Any]:
         payload = self.input_model.model_validate(raw_arguments or {})
         result = await self.run(payload)
-        return result.model_dump(by_alias=True)
+        return result.model_dump(by_alias=True, exclude_none=True)
 
     async def run(self, payload: FetchTransactionsInput) -> FetchTransactionsResponse:
         # XIT001 API uses 'year' parameter, not 'from'/'to'
@@ -155,10 +161,27 @@ class FetchTransactionsTool:
             elif isinstance(year_data, list):
                 all_data.extend(year_data)
 
-        # For XIT001, JSON and table format are both list of dicts,
-        # but 'table' usually implies we ensure it's flat.
-        # Since the API returns flat objects in 'data',
-        # we likely just return all_data.
+        # Check size of aggregated data
+        import json
+
+        json_str = json.dumps(all_data, ensure_ascii=False)
+        size_bytes = len(json_str.encode("utf-8"))
+        is_large = size_bytes > RESOURCE_THRESHOLD_BYTES
+
+        resource_uri = None
+        data_to_return = all_data
+
+        if is_large:
+            # Save to cache and return resource URI
+            cache_key = (
+                f"transactions:XIT001:{payload.area}:{payload.from_year}-"
+                f"{payload.to_year}:{payload.classification}:{payload.format}"
+            )
+            file_path = self._http_client.save_to_cache(
+                cache_key, json_str.encode("utf-8"), suffix=".json"
+            )
+            resource_uri = f"resource://mlit/transactions/{file_path.name}"
+            data_to_return = None
 
         logger.info(
             "fetch_transactions",
@@ -169,6 +192,8 @@ class FetchTransactionsTool:
                 "format": payload.format,
                 "record_count": len(all_data),
                 "cache_hit": False,  # Multiple requests
+                "size_bytes": size_bytes,
+                "is_resource": is_large,
             },
         )
 
@@ -176,7 +201,11 @@ class FetchTransactionsTool:
             cache_hit=False,
             format=payload.format,
         )
-        return FetchTransactionsResponse(data=all_data, meta=meta)
+        return FetchTransactionsResponse(
+            data=data_to_return,
+            resource_uri=resource_uri,
+            meta=meta,
+        )
 
 
 __all__ = [
