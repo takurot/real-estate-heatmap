@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import json
-from typing import Any, Literal
+from typing import Any
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -11,6 +11,7 @@ from mlit_mcp.http_client import MLITHttpClient
 from .gis_helpers import lat_lon_to_tile
 
 logger = logging.getLogger(__name__)
+
 
 class HazardType(str, Enum):
     FLOOD = "flood"
@@ -25,6 +26,7 @@ class HazardType(str, Enum):
             return "XKT029"
         return ""
 
+
 class FetchHazardRisksInput(BaseModel):
     """Input schema for the fetch_hazard_risks tool."""
 
@@ -33,30 +35,30 @@ class FetchHazardRisksInput(BaseModel):
     risk_types: list[HazardType] = Field(
         default=[HazardType.FLOOD, HazardType.LANDSLIDE],
         alias="riskTypes",
-        description="List of risk types to fetch"
+        description="List of risk types to fetch",
     )
     force_refresh: bool = Field(
         default=False,
         alias="forceRefresh",
-        description="If true, bypass cache and fetch fresh data"
+        description="If true, bypass cache and fetch fresh data",
     )
 
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
-class RiskFeature(BaseModel):
-    """Represents a single risk feature found at the location."""
-    type: str # Flood, Landslide
-    properties: dict[str, Any]
-    distance_to_center_m: float | None = None # Approximate, placeholder
 
 class FetchHazardRisksResponse(BaseModel):
     latitude: float
     longitude: float
-    tile_coords: dict[str, int] = Field(description="Tile coordinates used (z/x/y)", alias="tileCoords")
-    risks: dict[str, list[dict[str, Any]]] = Field(description="Found risk features by type")
+    tile_coords: dict[str, int] = Field(
+        description="Tile coordinates used (z/x/y)", alias="tileCoords"
+    )
+    risks: dict[str, list[dict[str, Any]]] = Field(
+        description="Found risk features by type"
+    )
     summary: list[str] = Field(description="Human readable summary of risks")
 
     model_config = ConfigDict(populate_by_name=True)
+
 
 class FetchHazardRisksTool:
     """Tool for fetching hazard map data (flood, landslide) for a specific location."""
@@ -120,28 +122,32 @@ class FetchHazardRisksTool:
                         content = fetch_result.file_path.read_bytes()
                         data = json.loads(content)
                     except Exception as ex:
-                        logger.error(f"Failed to read/parse file {fetch_result.file_path}: {ex}")
+                        logger.error(
+                            f"Failed to read/parse file {fetch_result.file_path}: {ex}"
+                        )
                         data = {}
-                
+
                 data = data or {}
                 features = data.get("features", [])
-                
+
                 # Simple filtering: Return all features in the tile
                 # Ideally we would do point-in-polygon check here
                 # But without shapely, we return tile contents and let user/LLM decide
                 # or we could attempt bounding box check if geometry is mostly boxes
-                
+
                 # For now, just return specific properties to save space
                 valid_features = []
                 for f in features:
                     props = f.get("properties", {})
-                    # Add simple "distance" check if geometry is Point? 
+                    # Add simple "distance" check if geometry is Point?
                     # Most hazard maps are Polygons.
                     valid_features.append(props)
 
                 if valid_features:
                     risks[risk_type.value] = valid_features
-                    summary.append(f"Found {len(valid_features)} {risk_type.value} records in tile area.")
+                    summary.append(
+                        f"Found {len(valid_features)} {risk_type.value} records in tile area."
+                    )
                 else:
                     risks[risk_type.value] = []
 
@@ -154,12 +160,13 @@ class FetchHazardRisksTool:
             longitude=payload.longitude,
             tileCoords={"z": Z, "x": x, "y": y},
             risks=risks,
-            summary=summary
+            summary=summary,
         )
 
+
 __all__ = [
-    "FetchHazardRisksInput", 
-    "FetchHazardRisksResponse", 
+    "FetchHazardRisksInput",
+    "FetchHazardRisksResponse",
     "FetchHazardRisksTool",
-    "HazardType"
+    "HazardType",
 ]
