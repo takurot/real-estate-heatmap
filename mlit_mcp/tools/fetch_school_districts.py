@@ -185,13 +185,22 @@ class FetchSchoolDistrictsTool:
             )
         else:
             # GeoJSON format
-            # If data is in a file, read it
+            # If data is in a file, read it (only if it's a JSON/GeoJSON file)
             if fetch_result.file_path and not fetch_result.data:
-                with open(fetch_result.file_path, "r", encoding="utf-8") as f:
-                    geojson_data = json.load(f)
+                file_ext = fetch_result.file_path.suffix.lower()
+                if file_ext in (".json", ".geojson"):
+                    with open(fetch_result.file_path, "r", encoding="utf-8") as f:
+                        geojson_data = json.load(f)
+                else:
+                    # File is not GeoJSON format (e.g., MVT), cannot parse
+                    logger.warning(
+                        "Expected GeoJSON file but got %s, returning None",
+                        file_ext,
+                    )
+                    geojson_data = None
             else:
                 geojson_data = fetch_result.data
-            
+
             return FetchSchoolDistrictsResponse(
                 geojson=geojson_data,
                 meta=meta,
