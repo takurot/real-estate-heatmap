@@ -74,6 +74,10 @@ class MLITHttpClient:
             "api_errors": self._stats["api_errors"],
         }
 
+    def save_to_cache(self, key: str, content: bytes, suffix: str = ".json") -> Path:
+        """Save content to the file cache and return the path."""
+        return self._file_cache.set(key, content, suffix=suffix)
+
     async def aclose(self) -> None:
         await self._client.aclose()
 
