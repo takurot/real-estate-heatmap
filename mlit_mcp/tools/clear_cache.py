@@ -16,7 +16,7 @@ class ClearCacheInput(BaseModel):
 class ClearCacheResponse(BaseModel):
     """Response schema for clear_cache tool."""
 
-    status: str = Field(description="Orperation status (success)")
+    status: str = Field(description="Operation status (success)")
     message: str = Field(description="Result message")
     stats: dict[str, int] = Field(description="Server statistics after clearing")
 
