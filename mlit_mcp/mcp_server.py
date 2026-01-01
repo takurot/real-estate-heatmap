@@ -407,6 +407,52 @@ async def get_market_trends(
     return result.model_dump(by_alias=True, exclude_none=True)
 
 
+@mcp.tool()
+async def detect_outliers(
+    from_year: int,
+    to_year: int,
+    area: str,
+    classification: str | None = None,
+    method: str = "iqr",
+    threshold: float = 1.5,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Detect outlier transactions in real estate data using IQR or Z-score methods.
+    Returns list of outliers and statistics before/after exclusion.
+
+    Args:
+        from_year: Starting year (2005-2030)
+        to_year: Ending year (2005-2030)
+        area: Area code (prefecture or city code)
+        classification: Optional transaction classification code
+        method: Detection method: 'iqr' (default) or 'zscore'
+        threshold: Threshold for detection. IQR: multiplier (default 1.5), Z-score: std devs
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.detect_outliers import (
+        DetectOutliersInput,
+        DetectOutliersTool,
+        OutlierMethod,
+    )
+
+    # Convert string method to enum
+    method_enum = OutlierMethod.IQR if method.lower() == "iqr" else OutlierMethod.ZSCORE
+
+    tool = DetectOutliersTool(http_client=_get_http_client())
+    input_data = DetectOutliersInput(
+        fromYear=from_year,
+        toYear=to_year,
+        area=area,
+        classification=classification,
+        method=method_enum,
+        threshold=threshold,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
 def main():
     """Run the MCP server."""
     mcp.run()
