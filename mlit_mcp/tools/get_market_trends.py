@@ -146,7 +146,7 @@ class GetMarketTrendsTool:
         # Sort years
         sorted_years = sorted([int(y) for y in price_by_year.keys()])
         yearly_data_list: list[YearlyData] = []
-        
+
         # Calculate YoY
         previous_price = None
         yoy_changes = []
@@ -157,12 +157,14 @@ class GetMarketTrendsTool:
             if previous_price is not None and previous_price > 0:
                 yoy = (price - previous_price) / previous_price
                 yoy_changes.append(yoy)
-            
-            yearly_data_list.append(YearlyData(
-                year=year,
-                price=price,
-                yoy_change=round(yoy, 4) if yoy is not None else None
-            ))
+
+            yearly_data_list.append(
+                YearlyData(
+                    year=year,
+                    price=price,
+                    yoy_change=round(yoy, 4) if yoy is not None else None,
+                )
+            )
             previous_price = price
 
         # Calculate CAGR
@@ -170,7 +172,7 @@ class GetMarketTrendsTool:
         first_year = sorted_years[0]
         last_year = sorted_years[-1]
         num_years = last_year - first_year
-        
+
         if num_years > 0:
             first_price = price_by_year[str(first_year)]
             last_price = price_by_year[str(last_year)]
@@ -189,16 +191,16 @@ class GetMarketTrendsTool:
                 trend = MarketTrend.DOWNTREND
             else:
                 trend = MarketTrend.FLAT
-            
+
             # Check for volatility (if std dev of yoy is high, maybe volatile? - simple check for now)
-            # If sign of YoY flips frequently, it might be volatile. 
+            # If sign of YoY flips frequently, it might be volatile.
             # keeping it simple based on CAGR for now as per plan.
 
         return GetMarketTrendsResponse(
             cagr=round(cagr, 4) if cagr is not None else None,
             averageYoy=round(avg_yoy, 4) if avg_yoy is not None else None,
             trend=trend,
-            yearlyData=yearly_data_list
+            yearlyData=yearly_data_list,
         )
 
 

@@ -262,7 +262,9 @@ class SummarizeTransactionsTool:
             },
         )
 
-        cache_hit_all = all(res.from_cache for res in fetch_results) if fetch_results else False
+        cache_hit_all = (
+            all(res.from_cache for res in fetch_results) if fetch_results else False
+        )
         meta = ResponseMeta(cacheHit=cache_hit_all)
         return SummarizeTransactionsResponse(
             recordCount=record_count,

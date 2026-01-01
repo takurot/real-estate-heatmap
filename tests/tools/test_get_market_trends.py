@@ -32,9 +32,9 @@ async def test_get_market_trends_uptrend(tool, mock_http_client):
         },
         countByYear={"2020": 10, "2021": 10, "2022": 10},
         typeDistribution={},
-        meta={"cacheHit": False, "dataset": "XIT001", "source": "test"}
+        meta={"cacheHit": False, "dataset": "XIT001", "source": "test"},
     )
-    
+
     # Mock the internal tool run
     tool._summarize_tool.run = AsyncMock(return_value=mock_summary_response)
 
@@ -69,9 +69,9 @@ async def test_get_market_trends_downtrend(tool, mock_http_client):
         },
         countByYear={"2020": 10, "2021": 10, "2022": 10},
         typeDistribution={},
-        meta={"cacheHit": False, "dataset": "XIT001", "source": "test"}
+        meta={"cacheHit": False, "dataset": "XIT001", "source": "test"},
     )
-    
+
     tool._summarize_tool.run = AsyncMock(return_value=mock_summary_response)
 
     input_data = GetMarketTrendsInput(fromYear=2020, toYear=2022, area="13103")
@@ -95,9 +95,9 @@ async def test_get_market_trends_flat(tool, mock_http_client):
         },
         countByYear={"2020": 10, "2021": 10, "2022": 10},
         typeDistribution={},
-        meta={"cacheHit": False, "dataset": "XIT001", "source": "test"}
+        meta={"cacheHit": False, "dataset": "XIT001", "source": "test"},
     )
-    
+
     tool._summarize_tool.run = AsyncMock(return_value=mock_summary_response)
 
     input_data = GetMarketTrendsInput(fromYear=2020, toYear=2022, area="13103")
@@ -115,9 +115,9 @@ async def test_get_market_trends_no_data(tool, mock_http_client):
         priceByYear={},
         countByYear={},
         typeDistribution={},
-        meta={"cacheHit": False, "dataset": "XIT001", "source": "test"}
+        meta={"cacheHit": False, "dataset": "XIT001", "source": "test"},
     )
-    
+
     tool._summarize_tool.run = AsyncMock(return_value=mock_summary_response)
 
     input_data = GetMarketTrendsInput(fromYear=2020, toYear=2022, area="13103")
