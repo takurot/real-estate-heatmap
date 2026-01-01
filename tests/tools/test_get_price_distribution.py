@@ -49,11 +49,11 @@ async def test_get_price_distribution_basic(tool, mock_http_client):
     assert result.min_price == 10000000
     assert result.max_price == 50000000
     assert len(result.bins) == 5
-    
+
     # Each bin should have exactly 1 item
     for bin_item in result.bins:
         assert bin_item.count == 1
-    
+
     assert result.bins[-1].cumulative_percent == 100.0
 
 
@@ -106,7 +106,7 @@ async def test_get_price_distribution_skewed(tool, mock_http_client):
     )
 
     result = await tool.run(input_data)
-    
+
     # Range 10M-100M. Range=90M. Bin size=45M.
     # Bin 1: 10M-55M. Should have 4 items.
     # Bin 2: 55M-100M. Should have 1 item.
