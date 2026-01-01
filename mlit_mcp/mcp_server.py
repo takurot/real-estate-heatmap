@@ -446,6 +446,78 @@ async def get_price_distribution(
     return result.model_dump(by_alias=True, exclude_none=True)
 
 
+@mcp.tool()
+async def calculate_unit_price(
+    from_year: int,
+    to_year: int,
+    area: str,
+    classification: str | None = None,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Calculate unit prices (price per square meter and price per tsubo)
+    from real estate transaction data.
+
+    Args:
+        from_year: Starting year (2005-2030)
+        to_year: Ending year (2005-2030)
+        area: Area code (prefecture or city code)
+        classification: Optional transaction classification code
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.calculate_unit_price import (
+        CalculateUnitPriceInput,
+        CalculateUnitPriceTool,
+    )
+
+    tool = CalculateUnitPriceTool(http_client=_get_http_client())
+    input_data = CalculateUnitPriceInput(
+        fromYear=from_year,
+        toYear=to_year,
+        area=area,
+        classification=classification,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
+@mcp.tool()
+async def compare_areas(
+    areas: list[str],
+    from_year: int,
+    to_year: int,
+    classification: str | None = None,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Compare multiple areas by average price and transaction count.
+    Returns statistics for each area and rankings.
+
+    Args:
+        areas: List of area codes (2-digit prefecture or 5-digit city codes)
+        from_year: Starting year (2005-2030)
+        to_year: Ending year (2005-2030)
+        classification: Optional transaction classification code
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.compare_areas import (
+        CompareAreasInput,
+        CompareAreasTool,
+    )
+
+    tool = CompareAreasTool(http_client=_get_http_client())
+    input_data = CompareAreasInput(
+        areas=areas,
+        fromYear=from_year,
+        toYear=to_year,
+        classification=classification,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
 def main():
     """Run the MCP server."""
     mcp.run()

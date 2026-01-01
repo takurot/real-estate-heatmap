@@ -179,7 +179,7 @@ class GetPriceDistributionTool:
         prices.sort()
         min_price = prices[0]
         max_price = prices[-1]
-        
+
         # Calculate percentiles
         percentile_25 = None
         percentile_75 = None
@@ -191,7 +191,7 @@ class GetPriceDistributionTool:
                 percentile_25 = int(q[0])
                 percentile_75 = int(q[2])
             except Exception:
-                pass # Fallback if quantiles fails
+                pass  # Fallback if quantiles fails
 
         # Generate bins
         price_range = max_price - min_price
@@ -203,14 +203,14 @@ class GetPriceDistributionTool:
             num_bins = 1
         else:
             bin_size = price_range / num_bins
-        
+
         bin_counts = [0] * num_bins
-        
+
         for price in prices:
             if price_range == 0:
                 bin_counts[0] += 1
                 continue
-                
+
             idx = int((price - min_price) / bin_size)
             if idx >= num_bins:
                 idx = num_bins - 1
@@ -218,7 +218,7 @@ class GetPriceDistributionTool:
 
         bins: list[PriceBin] = []
         cumulative_count = 0
-        
+
         for i in range(num_bins):
             bin_min = int(min_price + i * bin_size)
             bin_max = int(min_price + (i + 1) * bin_size)
@@ -229,7 +229,7 @@ class GetPriceDistributionTool:
             count = bin_counts[i]
             cumulative_count += count
             cumulative_percent = round((cumulative_count / record_count) * 100, 1)
-            
+
             # Format label (in 万円)
             label = f"{bin_min // 10000}万〜{bin_max // 10000}万"
 
