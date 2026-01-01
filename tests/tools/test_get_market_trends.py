@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from mlit_mcp.tools.get_market_trends import (
     GetMarketTrendsInput,
