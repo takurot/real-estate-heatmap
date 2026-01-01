@@ -26,6 +26,8 @@
 | `mlit.fetch_land_price_points` | 地価公示・都道府県地価調査を取得 (XKT001) | `area`, `year` | `responseFormat`, `forceRefresh` |
 | `mlit.fetch_urban_planning_zones` | 都市計画区域などを取得 (XKT011想定) | `area` | `bbox`, `responseFormat`, `forceRefresh` |
 | `mlit.fetch_school_districts` | 小学校区などのタイルデータを取得 (XKT021想定) | `area`, `z`, `x`, `y` | `crs`, `forceRefresh` |
+| `mlit.fetch_hazard_risks` | 洪水・土砂災害リスク情報を取得 | `latitude`, `longitude` | `riskTypes`, `forceRefresh` |
+| `mlit.get_server_stats` | サーバーの内部統計（キャッシュヒット率など）を取得 | - | - |
 
 #### 共通仕様
 - **forceRefresh**: `true` を指定するとキャッシュを無視して API を叩き直す。
@@ -58,3 +60,18 @@
 - **環境変数**: `MLIT_API_KEY` 必須。
 - **ログ**: 構造化ログを出力 (JSON)。API キーはマスクする。
 - **テスト**: `pytest` による単体テストおよび統合テスト。
+
+### 7. 今後の拡張案 (Proposed)
+
+#### データ分析系ツール
+
+| Tool 名 | 説明 | 必須パラメータ | オプション |
+| --- | --- | --- | --- |
+| `mlit.compare_areas` | 複数エリア間の価格・取引量を比較分析 | `areas` (配列), `yearFrom`, `yearTo` | `metrics`, `classification` |
+| `mlit.calculate_unit_price` | 坪単価・㎡単価を計算して返却 | `area`, `yearFrom`, `yearTo` | `priceType` (tsubo/sqm), `classification` |
+| `mlit.get_market_trends` | 価格推移・成長率 (CAGR, YoY) を計算 | `area`, `yearFrom`, `yearTo` | `trendType`, `classification` |
+| `mlit.get_price_distribution` | 価格帯別の分布統計を取得 | `area`, `yearFrom`, `yearTo` | `binSize`, `classification` |
+| `mlit.detect_outliers` | 異常値・特異取引を検出 | `area`, `yearFrom`, `yearTo` | `method` (iqr/zscore), `threshold` |
+
+#### 運用系ツール
+- **`mlit.clear_cache`**: キャッシュを手動でクリアする管理用ツール。
