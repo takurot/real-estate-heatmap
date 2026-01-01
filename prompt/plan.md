@@ -108,12 +108,17 @@ Phase 1 完了後、MCP サーバーのクライアントとして分析機能�
   - CSV/Parquet 保存機能。
 - **メリット**: API 制限管理やキャッシュをサーバー側に委譲できるため、クライアントコードがシンプルになる。
 
-### PR11: 可視化・レポート生成
+### PR11: 可視化・レポート生成 (完了)
 
 - **目的**: グラフ (PNG) 生成とランキング出力。
 - **実装**:
-  - `matplotlib`/`seaborn` を用いた価格推移グラフ。
-  - 傾きランキングの CSV 出力。
+  - `example/visualize_market.py` スクリプトの実装。
+  - `FetchTransactionsTool` を利用したデータ取得。
+  - `matplotlib`/`seaborn`/`pandas` を用いたグラフ生成:
+    - **価格推移グラフ**: 平均取引価格の年次推移 (Line Chart)。
+    - **価格分布**: 最新年の価格ヒストグラム (Histogram)。
+    - **特異点分析**: 築年数 vs 価格の相関 (Scatter Plot)。
+  - ランキング CSV 出力。
 
 ### PR12: Web Map 可視化
 
