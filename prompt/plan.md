@@ -147,7 +147,7 @@ Phase 1 完了後、MCP サーバーのクライアントとして分析機能�
 
 | PR | タイトル | 概要 | 依存 |
 | -- | -- | -- | -- |
-| **PR15** | `get_market_trends` ツール | 市場トレンド分析（CAGR、YoY成長率）をサーバー側で実行 | PR10 |
+| **PR15** | `get_market_trends` ツール | 市場トレンド分析（CAGR、YoY成長率）をサーバー側で実行 (完了) | PR10 |
 | **PR17** | `compare_areas` ツール | 複数エリアの価格・取引量比較分析 | PR4 |
 | **PR18** | `calculate_unit_price` ツール | 坪単価・㎡単価の計算ツール | PR4 |
 | **PR19** | `get_price_distribution` ツール | 価格帯別分布・ヒストグラム生成 | PR10 |

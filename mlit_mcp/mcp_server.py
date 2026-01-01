@@ -370,6 +370,43 @@ async def fetch_hazard_risks(
     return result.model_dump(by_alias=True, exclude_none=True)
 
 
+@mcp.tool()
+async def get_market_trends(
+    from_year: int,
+    to_year: int,
+    area: str,
+    classification: str | None = None,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Analyze market trends for a specific area and time range.
+    Calculates CAGR (Compound Annual Growth Rate) and YoY (Year-over-Year) growth.
+    Returns the overall trend (uptrend, downtrend, flat, etc.) and yearly data.
+
+    Args:
+        from_year: Starting year (2005-2030)
+        to_year: Ending year (2005-2030)
+        area: Area code (prefecture or city code)
+        classification: Optional transaction classification code
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.get_market_trends import (
+        GetMarketTrendsInput,
+        GetMarketTrendsTool,
+    )
+
+    tool = GetMarketTrendsTool(http_client=_get_http_client())
+    input_data = GetMarketTrendsInput(
+        fromYear=from_year,
+        toYear=to_year,
+        area=area,
+        classification=classification,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
 def main():
     """Run the MCP server."""
     mcp.run()
