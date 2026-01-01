@@ -29,9 +29,18 @@ logger = logging.getLogger(__name__)
 # Load Env
 load_dotenv()
 
-# Set Japanese Font for Mac
-sns.set_theme(font="Hiragino Sans")
-plt.rcParams['font.family'] = 'Hiragino Sans'
+# Set Japanese Font based on OS
+import platform
+system = platform.system()
+if system == "Darwin":
+    font_family = "Hiragino Sans"
+elif system == "Windows":
+    font_family = "Meiryo"
+else:
+    font_family = "Noto Sans CJK JP"
+
+sns.set_theme(font=font_family)
+plt.rcParams['font.family'] = font_family
 
 
 def resolve_resource(uri: str, cache_dir: Path) -> list[dict]:
@@ -43,14 +52,9 @@ def resolve_resource(uri: str, cache_dir: Path) -> list[dict]:
     file_path = cache_dir / filename
     
     if not file_path.exists():
-        # Fallback: check if it's in a subdirectory "files" (based on BinaryFileCache)
-        # However, earlier analysis showed BinaryFileCache saves directly to the dir using hash
-        # But FetchTransactionsTool.save_to_cache calls client.save_to_cache
-        # client uses self._file_cache.set(key, content)
-        # BinaryFileCache.set uses self._directory / <hash>.<suffix>
-        # But FetchTransactionsTool returns filename from path.name
-        # So we really need to find where that file is.
-        # If filename is hash.json, we look for it in cache_dir.
+        # Fallback logic could be added here if needed (e.g. search in subdirectories)
+        logger.warning(f"Resource file not found at expected path: {file_path}")
+        # checks purely by filename in the cache root for now
         pass
 
     logger.info(f"Loading resource from: {file_path}")
