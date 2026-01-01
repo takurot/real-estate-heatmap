@@ -408,6 +408,45 @@ async def get_market_trends(
 
 
 @mcp.tool()
+async def get_price_distribution(
+    from_year: int,
+    to_year: int,
+    area: str,
+    classification: str | None = None,
+    num_bins: int = 10,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Generate price distribution histogram from transaction data.
+    Returns bin counts, cumulative distribution, and percentiles.
+
+    Args:
+        from_year: Starting year (2005-2030)
+        to_year: Ending year (2005-2030)
+        area: Area code (prefecture or city code)
+        classification: Optional transaction classification code
+        num_bins: Number of histogram bins (default 10, range 2-50)
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.get_price_distribution import (
+        GetPriceDistributionInput,
+        GetPriceDistributionTool,
+    )
+
+    tool = GetPriceDistributionTool(http_client=_get_http_client())
+    input_data = GetPriceDistributionInput(
+        fromYear=from_year,
+        toYear=to_year,
+        area=area,
+        classification=classification,
+        numBins=num_bins,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
+@mcp.tool()
 async def detect_outliers(
     from_year: int,
     to_year: int,
