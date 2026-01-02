@@ -20,8 +20,8 @@
 
 1. リポジトリをクローン:
    ```bash
-   git clone https://github.com/takurot/real-estate-heatmap.git
-   cd real-estate-heatmap
+   git clone https://github.com/takurot/real-estate-mcp.git
+   cd real-estate-mcp
    ```
 
 2. 依存パッケージのインストール:
@@ -47,8 +47,9 @@ MCP クライアントの設定ファイル (例: `claude_desktop_config.json` �
 {
   "mcpServers": {
     "mlit": {
-      "command": "/absolute/path/to/real-estate-heatmap/.venv/bin/python",
+      "command": "/absolute/path/to/real-estate-mcp/.venv/bin/python",
       "args": ["-m", "mlit_mcp"],
+      "cwd": "/absolute/path/to/real-estate-mcp",
       "env": {
         "MLIT_API_KEY": "your_api_key_here"
       }
@@ -59,7 +60,28 @@ MCP クライアントの設定ファイル (例: `claude_desktop_config.json` �
 
 ### 2. コマンドラインでの動作確認
 
-サーバーは標準入出力 (stdio) を使用します。起動チェックは `py test` で行います。
+サーバーは標準入出力 (stdio) を使用します。まず依存関係を全てインストールしてください:
+
+```bash
+pip install -r requirements.txt
+```
+
+Cursor / Claude の設定に記載した `command` と `cwd` で、同じ内容を手動で確認する場合は、リポジトリ直下で次を実行します。
+
+```bash
+./.venv/bin/python -m mlit_mcp
+```
+
+何も表示されず待機状態になりますが正常です（MCP クライアントからの接続を待っています）。
+
+### 3. HTTP サーバーでのローカル確認（任意）
+
+FastAPI ベースの HTTP アダプターで簡易確認ができます。
+
+```bash
+uvicorn mlit_mcp.server:app --reload
+```
+ブラウザで `http://127.0.0.1:8000/docs` を開くと OpenAPI ドキュメントが表示されます。
 
 ## 利用可能なツール一覧
 
@@ -104,3 +126,6 @@ mypy mlit_mcp
 
 ## ライセンス
 MIT License
+
+## メンテナ向けメモ
+開発規約・構成・テスト方針の詳細は `AGENTS.md` を参照してください。
