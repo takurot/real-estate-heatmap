@@ -439,7 +439,6 @@ async def fetch_safety_info(
 @mcp.tool()
 async def get_market_trends(
     from_year: int,
-
     to_year: int,
     area: str,
     classification: str | None = None,
