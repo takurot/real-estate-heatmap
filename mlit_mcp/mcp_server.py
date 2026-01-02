@@ -524,10 +524,7 @@ async def fetch_station_stats(
 
 @mcp.tool()
 async def get_market_trends(
-
-
     from_year: int,
-
     to_year: int,
     area: str,
     classification: str | None = None,
