@@ -51,7 +51,7 @@ class FetchNearbyAmenitiesInput(BaseModel):
         le=154,
     )
     amenity_types: list[AmenityType] = Field(
-        default=[
+        default_factory=lambda: [
             AmenityType.SCHOOL,
             AmenityType.NURSERY,
             AmenityType.MEDICAL,
