@@ -152,7 +152,7 @@ Phase 1 完了後、MCP サーバーのクライアントとして分析機能�
 | **PR18** | `calculate_unit_price` ツール | 坪単価・㎡単価の計算ツール | PR4 |
 | **PR19** | `get_price_distribution` ツール | 価格帯別分布・ヒストグラム生成 | PR10 |
 | **PR20** | `detect_outliers` | 異常値・特異取引検出 (IQR/Z-score) | PR10 |
-| **PR21** | `fetch_safety_info` | 総合防災情報 (津波・高潮・避難所) | PR14 |
+| **PR21** | `fetch_safety_info` | 総合防災情報 (津波・高潮・避難所) (完了) | PR14 |
 | **PR22** | `fetch_nearby_amenities` | 周辺施設検索 (病院・教育・公共) | PR2 |
 | **PR23** | `fetch_station_stats` | 駅別乗降客数データ | PR2 |
 | **PR24** | `fetch_population_trend` | 将来推計人口 (500mメッシュ) | PR2 |
