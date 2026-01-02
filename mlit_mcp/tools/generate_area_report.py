@@ -82,9 +82,7 @@ class GenerateAreaReportTool:
         result = await self.run(payload)
         return result.model_dump(by_alias=True, exclude_none=True)
 
-    async def run(
-        self, payload: GenerateAreaReportInput
-    ) -> GenerateAreaReportResponse:
+    async def run(self, payload: GenerateAreaReportInput) -> GenerateAreaReportResponse:
         """Execute the tool with validated input."""
         sections: dict[str, Any] = {}
         report_parts: list[str] = []
@@ -112,9 +110,7 @@ class GenerateAreaReportTool:
 
             sections["safety"] = {
                 "summary": safety_result.summary,
-                "data_count": {
-                    k: len(v) for k, v in safety_result.safety_info.items()
-                },
+                "data_count": {k: len(v) for k, v in safety_result.safety_info.items()},
             }
 
             report_parts.append("## Safety Information")

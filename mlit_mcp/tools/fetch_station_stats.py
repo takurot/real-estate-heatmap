@@ -182,13 +182,15 @@ class FetchStationStatsTool:
                             except (ValueError, TypeError):
                                 pass
 
-                    stations.append({
-                        "station_name": station_name,
-                        "operator": props.get("S12_002_ja", "Unknown"),
-                        "line_name": props.get("S12_003_ja", "Unknown"),
-                        "passenger_count": passenger_count,
-                        "coordinates": coords,
-                    })
+                    stations.append(
+                        {
+                            "station_name": station_name,
+                            "operator": props.get("S12_002_ja", "Unknown"),
+                            "line_name": props.get("S12_003_ja", "Unknown"),
+                            "passenger_count": passenger_count,
+                            "coordinates": coords,
+                        }
+                    )
 
                 if stations:
                     summary.append(f"Found {len(stations)} stations in the area.")
