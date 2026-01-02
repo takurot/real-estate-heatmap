@@ -385,8 +385,181 @@ async def fetch_hazard_risks(
 
 
 @mcp.tool()
+async def fetch_safety_info(
+    latitude: float,
+    longitude: float,
+    info_types: list[str] | None = None,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Fetch comprehensive safety information (tsunami inundation, storm surge,
+    evacuation shelters) for a specific latitude/longitude.
+    Uses MLIT Real Estate Information Library APIs.
+
+    Args:
+        latitude: Latitude of the location (e.g. 35.6812)
+        longitude: Longitude of the location (e.g. 139.7671)
+        info_types: List of info types ['tsunami', 'storm_surge', 'shelter'],
+                    defaults to all
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.fetch_safety_info import (
+        FetchSafetyInfoInput,
+        FetchSafetyInfoTool,
+        SafetyInfoType,
+    )
+
+    # Convert string info types to Enum if provided
+    enum_types = []
+    if info_types:
+        for t in info_types:
+            try:
+                enum_types.append(SafetyInfoType(t.lower()))
+            except ValueError:
+                pass  # Ignore invalid types
+    else:
+        # Default to all available
+        enum_types = [
+            SafetyInfoType.TSUNAMI,
+            SafetyInfoType.STORM_SURGE,
+            SafetyInfoType.SHELTER,
+        ]
+
+    tool = FetchSafetyInfoTool(http_client=_get_http_client())
+    input_data = FetchSafetyInfoInput(
+        latitude=latitude,
+        longitude=longitude,
+        infoTypes=enum_types,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
+@mcp.tool()
+async def fetch_nearby_amenities(
+    latitude: float,
+    longitude: float,
+    amenity_types: list[str] | None = None,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Fetch nearby amenities (schools, nurseries, medical facilities, welfare)
+    for a specific latitude/longitude.
+    Uses MLIT Real Estate Information Library APIs.
+
+    Args:
+        latitude: Latitude of the location (e.g. 35.6812)
+        longitude: Longitude of the location (e.g. 139.7671)
+        amenity_types: List of types ['school', 'nursery', 'medical', 'welfare'],
+                       defaults to all
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.fetch_nearby_amenities import (
+        FetchNearbyAmenitiesInput,
+        FetchNearbyAmenitiesTool,
+        AmenityType,
+    )
+
+    # Convert string types to Enum if provided
+    enum_types = []
+    if amenity_types:
+        for t in amenity_types:
+            try:
+                enum_types.append(AmenityType(t.lower()))
+            except ValueError:
+                pass  # Ignore invalid types
+    else:
+        # Default to all available
+        enum_types = [
+            AmenityType.SCHOOL,
+            AmenityType.NURSERY,
+            AmenityType.MEDICAL,
+            AmenityType.WELFARE,
+        ]
+
+    tool = FetchNearbyAmenitiesTool(http_client=_get_http_client())
+    input_data = FetchNearbyAmenitiesInput(
+        latitude=latitude,
+        longitude=longitude,
+        amenityTypes=enum_types,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
+@mcp.tool()
+async def fetch_station_stats(
+    latitude: float | None = None,
+    longitude: float | None = None,
+    station_name: str | None = None,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Fetch train station passenger count statistics for a specific location
+    or station name. Uses MLIT Real Estate Information Library API (XKT015).
+
+    Args:
+        latitude: Latitude of the location (optional if station_name is provided)
+        longitude: Longitude of the location (optional if station_name is provided)
+        station_name: Station name to search for (optional if lat/lon is provided)
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.fetch_station_stats import (
+        FetchStationStatsInput,
+        FetchStationStatsTool,
+    )
+
+    tool = FetchStationStatsTool(http_client=_get_http_client())
+    input_data = FetchStationStatsInput(
+        latitude=latitude,
+        longitude=longitude,
+        stationName=station_name,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
+@mcp.tool()
+async def fetch_population_trend(
+    latitude: float,
+    longitude: float,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Fetch future population projection data (250m mesh) for a specific location.
+    Uses MLIT Real Estate Information Library API (XKT013).
+    Returns population projections from 2020 to 2050 in 5-year intervals.
+
+    Args:
+        latitude: Latitude of the location (e.g. 35.6812)
+        longitude: Longitude of the location (e.g. 139.7671)
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.fetch_population_trend import (
+        FetchPopulationTrendInput,
+        FetchPopulationTrendTool,
+    )
+
+    tool = FetchPopulationTrendTool(http_client=_get_http_client())
+    input_data = FetchPopulationTrendInput(
+        latitude=latitude,
+        longitude=longitude,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
+@mcp.tool()
 async def get_market_trends(
+
+
+
     from_year: int,
+
     to_year: int,
     area: str,
     classification: str | None = None,
