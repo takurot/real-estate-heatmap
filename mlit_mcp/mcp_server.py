@@ -437,6 +437,59 @@ async def fetch_safety_info(
 
 
 @mcp.tool()
+async def fetch_nearby_amenities(
+    latitude: float,
+    longitude: float,
+    amenity_types: list[str] | None = None,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Fetch nearby amenities (schools, nurseries, medical facilities, welfare)
+    for a specific latitude/longitude.
+    Uses MLIT Real Estate Information Library APIs.
+
+    Args:
+        latitude: Latitude of the location (e.g. 35.6812)
+        longitude: Longitude of the location (e.g. 139.7671)
+        amenity_types: List of types ['school', 'nursery', 'medical', 'welfare'],
+                       defaults to all
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.fetch_nearby_amenities import (
+        FetchNearbyAmenitiesInput,
+        FetchNearbyAmenitiesTool,
+        AmenityType,
+    )
+
+    # Convert string types to Enum if provided
+    enum_types = []
+    if amenity_types:
+        for t in amenity_types:
+            try:
+                enum_types.append(AmenityType(t.lower()))
+            except ValueError:
+                pass  # Ignore invalid types
+    else:
+        # Default to all available
+        enum_types = [
+            AmenityType.SCHOOL,
+            AmenityType.NURSERY,
+            AmenityType.MEDICAL,
+            AmenityType.WELFARE,
+        ]
+
+    tool = FetchNearbyAmenitiesTool(http_client=_get_http_client())
+    input_data = FetchNearbyAmenitiesInput(
+        latitude=latitude,
+        longitude=longitude,
+        amenityTypes=enum_types,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
+@mcp.tool()
 async def get_market_trends(
     from_year: int,
     to_year: int,
