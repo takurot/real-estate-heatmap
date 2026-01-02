@@ -12,6 +12,7 @@ from .fetch_urban_planning_zones import FetchUrbanPlanningZonesTool
 from .fetch_school_districts import FetchSchoolDistrictsTool
 from .fetch_safety_info import FetchSafetyInfoTool
 from .fetch_nearby_amenities import FetchNearbyAmenitiesTool
+from .fetch_station_stats import FetchStationStatsTool
 
 
 def build_tools(http_client: MLITHttpClient) -> Dict[str, Any]:
@@ -26,6 +27,7 @@ def build_tools(http_client: MLITHttpClient) -> Dict[str, Any]:
         FetchSchoolDistrictsTool(http_client=http_client),
         FetchSafetyInfoTool(http_client=http_client),
         FetchNearbyAmenitiesTool(http_client=http_client),
+        FetchStationStatsTool(http_client=http_client),
     ]
     return {tool.name: tool for tool in tools}
 
@@ -40,4 +42,5 @@ __all__ = [
     "FetchSchoolDistrictsTool",
     "FetchSafetyInfoTool",
     "FetchNearbyAmenitiesTool",
+    "FetchStationStatsTool",
 ]

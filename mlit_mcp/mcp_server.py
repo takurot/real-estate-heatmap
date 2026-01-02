@@ -490,6 +490,39 @@ async def fetch_nearby_amenities(
 
 
 @mcp.tool()
+async def fetch_station_stats(
+    latitude: float | None = None,
+    longitude: float | None = None,
+    station_name: str | None = None,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Fetch train station passenger count statistics for a specific location
+    or station name. Uses MLIT Real Estate Information Library API (XKT015).
+
+    Args:
+        latitude: Latitude of the location (optional if station_name is provided)
+        longitude: Longitude of the location (optional if station_name is provided)
+        station_name: Station name to search for (optional if lat/lon is provided)
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.fetch_station_stats import (
+        FetchStationStatsInput,
+        FetchStationStatsTool,
+    )
+
+    tool = FetchStationStatsTool(http_client=_get_http_client())
+    input_data = FetchStationStatsInput(
+        latitude=latitude,
+        longitude=longitude,
+        stationName=station_name,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
+@mcp.tool()
 async def get_market_trends(
     from_year: int,
     to_year: int,
