@@ -523,6 +523,37 @@ async def fetch_station_stats(
 
 
 @mcp.tool()
+async def fetch_population_trend(
+    latitude: float,
+    longitude: float,
+    force_refresh: bool = False,
+) -> dict:
+    """
+    Fetch future population projection data (250m mesh) for a specific location.
+    Uses MLIT Real Estate Information Library API (XKT013).
+    Returns population projections from 2020 to 2050 in 5-year intervals.
+
+    Args:
+        latitude: Latitude of the location (e.g. 35.6812)
+        longitude: Longitude of the location (e.g. 139.7671)
+        force_refresh: If true, bypass cache and fetch fresh data
+    """
+    from .tools.fetch_population_trend import (
+        FetchPopulationTrendInput,
+        FetchPopulationTrendTool,
+    )
+
+    tool = FetchPopulationTrendTool(http_client=_get_http_client())
+    input_data = FetchPopulationTrendInput(
+        latitude=latitude,
+        longitude=longitude,
+        forceRefresh=force_refresh,
+    )
+    result = await tool.run(input_data)
+    return result.model_dump(by_alias=True, exclude_none=True)
+
+
+@mcp.tool()
 async def get_market_trends(
     from_year: int,
     to_year: int,
