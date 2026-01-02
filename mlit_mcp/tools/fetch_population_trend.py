@@ -141,10 +141,12 @@ class FetchPopulationTrendTool:
                             pass
 
                 if population_by_year:
-                    mesh_data.append({
-                        "mesh_id": mesh_id,
-                        "population_by_year": population_by_year,
-                    })
+                    mesh_data.append(
+                        {
+                            "mesh_id": mesh_id,
+                            "population_by_year": population_by_year,
+                        }
+                    )
 
             if mesh_data:
                 summary.append(f"Found population data for {len(mesh_data)} meshes.")

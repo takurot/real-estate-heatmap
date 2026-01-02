@@ -183,9 +183,7 @@ class FetchNearbyAmenitiesTool:
             except Exception as e:
                 logger.error(f"Failed to fetch {amenity_type}: {e}")
                 amenities[amenity_type.value] = []
-                summary.append(
-                    f"Failed to fetch {amenity_type.value} information: {e}"
-                )
+                summary.append(f"Failed to fetch {amenity_type.value} information: {e}")
 
         return FetchNearbyAmenitiesResponse(
             latitude=payload.latitude,
