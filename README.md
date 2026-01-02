@@ -75,6 +75,30 @@ MCP クライアントの設定ファイル (例: `claude_desktop_config.json` �
 - Claude Desktop の設定ファイルパス（macOS 例）: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Cursor はアプリ内の MCP 設定から `mcpServers` を追加してください（設定 UI/ドキュメントに準拠）。
 
+Codex CLI（.codex/config.toml）での設定例（推奨: cwd を指定）:
+
+```toml
+[mcp_servers.mlit]
+command = "/absolute/path/to/real-estate-mcp/.venv/bin/python"
+args = ["-m", "mlit_mcp"]
+cwd = "/absolute/path/to/real-estate-mcp"
+
+[mcp_servers.mlit.env]
+MLIT_API_KEY = "your_api_key_here"
+```
+
+もしクライアントが `cwd` をサポートしておらず `mlit_mcp` が見つからない場合は、`PYTHONPATH` にプロジェクトルートを追加してください（Python 実行ファイルのパスではありません）。
+
+```toml
+[mcp_servers.mlit]
+command = "/absolute/path/to/real-estate-mcp/.venv/bin/python"
+args = ["-m", "mlit_mcp"]
+
+[mcp_servers.mlit.env]
+MLIT_API_KEY = "your_api_key_here"
+PYTHONPATH = "/absolute/path/to/real-estate-mcp"
+```
+
 ### 2. コマンドラインでの動作確認
 
 サーバーは標準入出力 (stdio) を使用します。まず依存関係を全てインストールしてください:
