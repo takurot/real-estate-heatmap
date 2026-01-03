@@ -18,12 +18,6 @@
 
 ## インストール
 
-1. リポジトリをクローン:
-   ```bash
-   git clone https://github.com/takurot/real-estate-mcp.git
-   cd real-estate-mcp
-   ```
-
 ### PyPI からインストールする場合 (推奨)
 
 ```bash
@@ -32,6 +26,11 @@ pip install mlit-mcp
 
 ### ソースコードからインストールする場合
 
+1. リポジトリをクローン:
+   ```bash
+   git clone https://github.com/takurot/real-estate-mcp.git
+   cd real-estate-mcp
+   ```
 
 2. 依存パッケージのインストール:
    ```bash
@@ -49,6 +48,42 @@ pip install mlit-mcp
 ## 使い方 (MCP サーバーとして実行)
 
 ### 1. MCP サーバーの設定方法
+
+#### PyPI でインストールした場合 (推奨)
+
+`uvx` (uv) を使用するか、pip でインストールした `mlit-mcp` コマンドを使用します。
+
+**uv (推奨)**
+```json
+{
+  "mcpServers": {
+    "mlit": {
+      "command": "uvx",
+      "args": ["mlit-mcp"],
+      "env": {
+        "MLIT_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+**pip install (venv)**
+```json
+{
+  "mcpServers": {
+    "mlit": {
+      "command": "/absolute/path/to/venv/bin/mlit-mcp",
+      "args": [],
+      "env": {
+        "MLIT_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+#### ソースコードから実行する場合
 
 以下の手順で MCP クライアントから本サーバーを利用できます。
 
